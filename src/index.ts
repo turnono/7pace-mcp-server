@@ -137,7 +137,7 @@ class SevenPaceService {
     const worklog: WorklogEntry = {
       workItemId: entry.workItemId,
       timestamp: `${entry.date}T00:00:00`,
-      length: entry.hours * 60, // create expects minutes
+      length: entry.hours * 3600, // create expects seconds
       comment: entry.description,
       ...(activityTypeId ? { activityTypeId } : {}),
     };
@@ -210,7 +210,7 @@ class SevenPaceService {
     try {
       const worklog: Partial<WorklogEntry> = {};
       if (typeof updates.hours === "number")
-        worklog.length = updates.hours * 60;
+        worklog.length = updates.hours * 3600; // update expects seconds
       if (updates.description) worklog.comment = updates.description;
       if (updates.workItemId) worklog.workItemId = updates.workItemId;
 
