@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "7pace-timetracker": {
+      "command": "node",
+      "args": ["./mcp-servers/7pace-mcp-server/dist/index.js"],
+      "cwd": "../../"
+    },
+    "azure-devops": {
+      "command": "npx",
+      "args": ["-y", "@vortiago/azure-devops-mcp"],
+      "env": {
+        "AZURE_DEVOPS_ORG_URL": "https://dev.azure.com/labournet",
+        "AZURE_DEVOPS_PAT": "your_azure_devops_pat_here"
+      }
+    }
+  }
+}

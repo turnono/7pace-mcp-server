@@ -1,0 +1,33 @@
+{
+  "name": "7pace-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for 7pace Timetracker integration with Azure DevOps",
+  "main": "dist/index.js",
+  "bin": {
+    "7pace-mcp-server": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "mcp",
+    "7pace",
+    "timetracker",
+    "azure-devops",
+    "time-tracking"
+  ],
+  "author": "Labournet DevOps Team",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.1",
+    "@types/node": "^24.2.0",
+    "axios": "^1.11.0",
+    "dotenv": "^17.2.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  }
+}
