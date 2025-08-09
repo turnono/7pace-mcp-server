@@ -82,6 +82,52 @@ Add to your MCP client configuration:
 }
 ```
 
+### Cursor / VS Code via NPX (no clone)
+
+Use NPX to install from GitHub and run locally (stdio transport):
+
+```json
+{
+  "mcpServers": {
+    "7pace-timetracker": {
+      "command": "npx",
+      "args": ["-y", "github:turnono/7pace-mcp-server"],
+      "env": {
+        "SEVENPACE_ORGANIZATION": "your-org",
+        "SEVENPACE_TOKEN": "your-token",
+        "SEVENPACE_DEFAULT_ACTIVITY_TYPE_ID": "optional-id"
+      }
+    }
+  }
+}
+```
+
+VS Code workspace config (`.vscode/mcp.json`):
+
+```json
+{
+  "servers": {
+    "7pace-timetracker": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "github:turnono/7pace-mcp-server"],
+      "env": {
+        "SEVENPACE_ORGANIZATION": "your-org",
+        "SEVENPACE_TOKEN": "your-token",
+        "SEVENPACE_DEFAULT_ACTIVITY_TYPE_ID": "optional-id"
+      },
+      "version": "1.0.0"
+    }
+  }
+}
+```
+
+Notes:
+
+- Requires Node.js 18+ on the local machine
+- This server uses stdio; run locally (do not deploy to cloud HTTP)
+- After adding, restart Cursor/VS Code
+
 ## API Tools
 
 ### log_time
