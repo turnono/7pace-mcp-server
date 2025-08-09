@@ -132,6 +132,14 @@ class SevenPaceService {
   }
 
   async logTime(entry: TimeEntry): Promise<any> {
+    // Check for test credentials
+    if (this.config.token === "test-token-replace-with-real-token") {
+      throw new McpError(
+        ErrorCode.InternalError,
+        "Cannot log time with test credentials. Please update .env file with real SEVENPACE_TOKEN and SEVENPACE_ORGANIZATION values."
+      );
+    }
+
     const activityTypeId = await this.resolveActivityTypeId(entry.activityType);
 
     const worklog: WorklogEntry = {
@@ -163,6 +171,14 @@ class SevenPaceService {
     startDate?: string,
     endDate?: string
   ): Promise<WorklogEntry[]> {
+    // Check for test credentials
+    if (this.config.token === "test-token-replace-with-real-token") {
+      throw new McpError(
+        ErrorCode.InternalError,
+        "Cannot retrieve worklogs with test credentials. Please update .env file with real SEVENPACE_TOKEN and SEVENPACE_ORGANIZATION values."
+      );
+    }
+
     try {
       const params: any = {};
       if (workItemId) params.workItemId = workItemId;
@@ -299,9 +315,18 @@ class SevenPaceMCPServer {
     };
 
     if (!config.token || !config.organizationName) {
-      throw new Error(
-        "Missing required environment variables: SEVENPACE_TOKEN and SEVENPACE_ORGANIZATION"
-      );
+      // In development/testing mode, warn but don't fail immediately
+      if (config.token === "test-token-replace-with-real-token" || 
+          config.organizationName === "test-org") {
+        console.error(
+          "⚠️  Warning: Using test credentials. MCP server will start but API calls will fail.\n" +
+          "   For real testing, update .env file with actual SEVENPACE_TOKEN and SEVENPACE_ORGANIZATION values."
+        );
+      } else {
+        throw new Error(
+          "Missing required environment variables: SEVENPACE_TOKEN and SEVENPACE_ORGANIZATION"
+        );
+      }
     }
 
     this.sevenPaceService = new SevenPaceService(config);
