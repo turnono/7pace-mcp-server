@@ -31,6 +31,13 @@ A Model Context Protocol (MCP) server that integrates with 7pace Timetracker for
 2. **Configure environment variables**:
 
    ```bash
+   cp .env.test .env
+   # Edit .env with your actual values
+   ```
+
+   Or manually copy the env.example:
+   
+   ```bash
    cp env.example .env
    # Edit .env with your actual values
    ```
