@@ -1,3 +1,38 @@
+name: sevenpace-mcp-server
+runtime: node18
+install: npm ci
+build: npm run build
+start: node dist/index.js
+
+# Optional deployment-level env fallbacks. Prefer setting via Profiles UI below.
+# env:
+#   SEVENPACE_ORGANIZATION: "your-org"
+#   SEVENPACE_TOKEN: "your-token"
+#   SEVENPACE_BASE_URL: "https://your-org.timehub.7pace.com"
+#   SEVENPACE_DEFAULT_ACTIVITY_TYPE_ID: "optional-id"
+
+config:
+  fields:
+    - key: sevenpaceOrganization
+      label: 7pace Organization
+      type: string
+      env: SEVENPACE_ORGANIZATION
+      required: true
+    - key: sevenpaceToken
+      label: 7pace API Token
+      type: secret
+      env: SEVENPACE_TOKEN
+      required: true
+    - key: sevenpaceBaseUrl
+      label: 7pace Base URL (optional)
+      type: string
+      env: SEVENPACE_BASE_URL
+      required: false
+    - key: sevenpaceDefaultActivityTypeId
+      label: Default Activity Type ID (optional)
+      type: string
+      env: SEVENPACE_DEFAULT_ACTIVITY_TYPE_ID
+      required: false
 # Smithery configuration file: https://smithery.ai/docs/build/project-config
 
 startCommand:
