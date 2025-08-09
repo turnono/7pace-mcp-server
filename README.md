@@ -49,6 +49,14 @@ A Model Context Protocol (MCP) server that integrates with 7pace Timetracker for
    export SEVENPACE_DEFAULT_ACTIVITY_TYPE_ID="your_activity_type_id"
    ```
 
+4. **Verify installation**:
+
+   ```bash
+   npm test
+   ```
+
+   This runs a health check to verify the MCP server can start and handle basic protocol messages.
+
 ## Usage
 
 ### Standalone Mode
@@ -245,7 +253,37 @@ npm run build
 
 # Start production server
 npm start
+
+# Run health check to verify server works
+npm test
 ```
+
+## Testing
+
+The server includes a comprehensive testing system to verify it's working correctly:
+
+```bash
+# Quick health check
+npm test
+
+# Full test suite (recommended)
+npm run test:full
+
+# Manual health check
+node health-check.js
+
+# Complete test suite
+node test-suite.js
+```
+
+**Test Coverage:**
+- ✅ MCP Protocol initialization and communication
+- ✅ Tool registration and availability (5 tools)
+- ✅ Environment configuration validation
+- ✅ Build system integrity
+- ✅ Error handling for test credentials
+
+**Note**: The tests work with test credentials, but actual API operations require real 7pace credentials. Update your `.env` file with actual values for full functionality.
 
 ## Troubleshooting
 
