@@ -1,5 +1,7 @@
 # 7pace Timetracker MCP Server
 
+[![smithery badge](https://smithery.ai/badge/@turnono/sevenpace-mcp-server)](https://smithery.ai/server/@turnono/sevenpace-mcp-server)
+
 A Model Context Protocol (MCP) server that integrates with 7pace Timetracker for Azure DevOps time tracking functionality.
 
 ## Features
@@ -20,6 +22,15 @@ A Model Context Protocol (MCP) server that integrates with 7pace Timetracker for
 
 ## Installation
 
+### Installing via Smithery
+
+To install sevenpace-mcp-server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@turnono/sevenpace-mcp-server):
+
+```bash
+npx -y @smithery/cli install @turnono/sevenpace-mcp-server --client claude
+```
+
+### Manual Installation
 1. **Clone and install**:
 
    ```bash
