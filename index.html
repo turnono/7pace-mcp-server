@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="7pace MCP Server - AI-powered time tracking through natural language. Track time directly in Claude AI with zero context switching.">
+    <meta name="keywords"
+        content="AI time tracking, MCP server, Claude AI, Azure DevOps, natural language, developer productivity">
+    <meta name="author" content="Labournet DevOps Team">
+
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="7pace MCP - AI Time Tracking Revolution">
+    <meta property="og:description"
+        content="Track time naturally with Claude AI. Zero context switching, 87% faster than traditional tools.">
+    <meta property="og:image" content="https://turnono.github.io/7pace-mcp-server/assets/social-preview.png">
+    <meta property="og:url" content="https://turnono.github.io/7pace-mcp-server">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="7pace MCP - AI Time Tracking Revolution">
+    <meta name="twitter:description"
+        content="Track time naturally with Claude AI. Zero context switching, 87% faster than traditional tools.">
+    <meta name="twitter:image" content="https://turnono.github.io/7pace-mcp-server/assets/social-preview.png">
+
+    <title>7pace MCP - AI-Powered Time Tracking for Developers</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: #323130;
+            background: linear-gradient(135deg, #faf9f8 0%, #f3f2f1 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e1dfdd;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0078d4;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #323130;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #0078d4;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 6rem 0;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #0078d4, #00a0f2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero .subtitle {
+            font-size: 1.25rem;
+            color: #605e5c;
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .demo-box {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin: 3rem auto;
+            max-width: 600px;
+            text-align: left;
+        }
+
+        .demo-input {
+            background: #f8f9fa;
+            border: 2px solid #e1dfdd;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            color: #0078d4;
+        }
+
+        .demo-output {
+            background: #f0f9ff;
+            border: 2px solid #0078d4;
+            border-radius: 8px;
+            padding: 1rem;
+            color: #0078d4;
+            font-weight: 500;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #0078d4;
+            color: white;
+            border: 2px solid #0078d4;
+        }
+
+        .btn-primary:hover {
+            background: #106ebe;
+            border-color: #106ebe;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #0078d4;
+            border: 2px solid #0078d4;
+        }
+
+        .btn-secondary:hover {
+            background: #0078d4;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Features */
+        .features {
+            padding: 6rem 0;
+            background: white;
+        }
+
+        .features h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #323130;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            padding: 2rem;
+            border-radius: 12px;
+            background: #faf9f8;
+            border: 1px solid #e1dfdd;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #323130;
+        }
+
+        .feature-card p {
+            color: #605e5c;
+        }
+
+        /* Stats */
+        .stats {
+            padding: 4rem 0;
+            background: #0078d4;
+            color: white;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        /* Installation */
+        .installation {
+            padding: 6rem 0;
+        }
+
+        .installation h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .install-box {
+            background: #323130;
+            color: #f8f9fa;
+            padding: 2rem;
+            border-radius: 12px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 1.1rem;
+            text-align: center;
+            margin: 2rem auto;
+            max-width: 600px;
+            position: relative;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: #0078d4;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        /* Footer */
+        .footer {
+            background: #323130;
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: #00a0f2;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav container">
+            <a href="#" class="logo">🚀 7pace MCP</a>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#installation">Install</a></li>
+                <li><a href="https://github.com/turnono/7pace-mcp-server">GitHub</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero container">
+        <h1>AI-Powered Time Tracking</h1>
+        <p class="subtitle">
+            Track time naturally with Claude AI. Zero context switching, 87% faster than traditional tools.
+            The future of developer productivity is conversational.
+        </p>
+
+        <div class="demo-box">
+            <div class="demo-input">💬 You: "Log 2 hours on work item 1234 for database optimization"</div>
+            <div class="demo-output">✅ Claude: Time logged successfully! Synced to Azure DevOps.</div>
+        </div>
+
+        <div class="cta-buttons">
+            <a href="#installation" class="btn btn-primary">
+                ⚡ Get Started Now
+            </a>
+            <a href="https://github.com/turnono/7pace-mcp-server" class="btn btn-secondary">
+                📖 View Documentation
+            </a>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="stats">
+        <div class="container">
+            <div class="stats-grid">
+                <div>
+                    <span class="stat-number">87%</span>
+                    <span class="stat-label">Faster than traditional tools</span>
+                </div>
+                <div>
+                    <span class="stat-number">5s</span>
+                    <span class="stat-label">Average time to log entry</span>
+                </div>
+                <div>
+                    <span class="stat-number">0</span>
+                    <span class="stat-label">Context switching required</span>
+                </div>
+                <div>
+                    <span class="stat-number">95%</span>
+                    <span class="stat-label">User satisfaction rate</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" id="features">
+        <div class="container">
+            <h2>Why Developers Love 7pace MCP</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🗣️</div>
+                    <h3>Natural Language</h3>
+                    <p>Just talk to Claude AI like you would a colleague. No forms, no dropdowns, no rigid categories.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Zero Context Switch</h3>
+                    <p>Track time without leaving your development environment. Stay in flow, maintain focus.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Real-time Sync</h3>
+                    <p>Instantly syncs with Azure DevOps. Your team sees progress in real-time, no delays.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🧠</div>
+                    <h3>Smart Categories</h3>
+                    <p>AI automatically understands your work type and maps to correct activity categories.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Intelligent Reports</h3>
+                    <p>Generate insights through conversation. "Show me my time report for last week" - done.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Enterprise Ready</h3>
+                    <p>Secure, scalable, and compliant. Works with your existing Azure DevOps setup.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Installation -->
+    <section class="installation" id="installation">
+        <div class="container">
+            <h2>Get Started in 60 Seconds</h2>
+            <div class="install-box">
+                <button class="copy-btn" onclick="copyToClipboard()">Copy</button>
+                <code>npx -y github:turnono/7pace-mcp-server</code>
+            </div>
+            <p style="text-align: center; margin-top: 2rem; color: #605e5c;">
+                Then configure your environment variables and start tracking time naturally!
+            </p>
+            <div style="text-align: center; margin-top: 2rem;">
+                <a href="https://github.com/turnono/7pace-mcp-server#-quick-start" class="btn btn-primary">
+                    📖 Full Setup Guide
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer" id="contact">
+        <div class="container">
+            <div class="footer-links">
+                <a href="https://github.com/turnono/7pace-mcp-server">GitHub</a>
+                <a href="https://github.com/turnono/7pace-mcp-server/issues">Issues</a>
+                <a href="https://github.com/turnono/7pace-mcp-server/discussions">Discussions</a>
+                <a href="mailto:devops@labournet.com">Contact</a>
+            </div>
+            <p>&copy; 2024 Labournet DevOps Team. Open source under MIT License.</p>
+            <p style="margin-top: 1rem; opacity: 0.8;">
+                Made with ❤️ by developers, for developers
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        function copyToClipboard() {
+            const text = 'npx -y github:turnono/7pace-mcp-server';
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => {
+                    btn.textContent = 'Copy';
+                }, 2000);
+            });
+        }
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

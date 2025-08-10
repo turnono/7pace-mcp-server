@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "taajirah"
+  },
+  "targets": {
+    "taajirah": {
+      "hosting": {
+        "7pace-mcp": [
+          "7pace-mcp"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
