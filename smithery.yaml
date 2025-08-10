@@ -1,0 +1,49 @@
+# Smithery configuration file: https://smithery.ai/docs/build/project-config
+
+startCommand:
+  type: stdio
+  commandFunction:
+    # A JS function that produces the CLI command based on the given config to start the MCP on stdio.
+    |-
+    (config) => {
+      const env = {
+        SEVENPACE_ORGANIZATION: config.sevenpaceOrganization,
+        SEVENPACE_TOKEN: config.sevenpaceToken
+      };
+      if (config.azureDevopsOrgUrl) env.AZURE_DEVOPS_ORG_URL = config.azureDevopsOrgUrl;
+      if (config.azureDevopsPat) env.AZURE_DEVOPS_PAT = config.azureDevopsPat;
+      if (config.sevenpaceDefaultActivityTypeId) env.SEVENPACE_DEFAULT_ACTIVITY_TYPE_ID = config.sevenpaceDefaultActivityTypeId;
+      return {
+        command: 'node',
+        args: ['dist/index.js'],
+        env
+      };
+    }
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    required:
+      - sevenpaceOrganization
+      - sevenpaceToken
+    properties:
+      sevenpaceOrganization:
+        type: string
+        description: 7pace organization name, e.g., "labournet"
+      sevenpaceToken:
+        type: string
+        description: 7pace API token
+      azureDevopsOrgUrl:
+        type: string
+        description: Azure DevOps organization URL, e.g., https://dev.azure.com/your-org
+      azureDevopsPat:
+        type: string
+        description: Azure DevOps Personal Access Token
+      sevenpaceDefaultActivityTypeId:
+        type: string
+        description: Default activity type ID to use when resolution by name fails
+  exampleConfig:
+    sevenpaceOrganization: labournet
+    sevenpaceToken: your_7pace_api_token
+    azureDevopsOrgUrl: https://dev.azure.com/labournet
+    azureDevopsPat: your_azure_devops_pat
+    sevenpaceDefaultActivityTypeId: optional_activity_type_id
