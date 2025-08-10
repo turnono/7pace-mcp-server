@@ -5,6 +5,7 @@
 **Supercharge your Azure DevOps workflow with intelligent time tracking through Claude AI**
 
 [![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-blue?logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMSA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDMgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSIjMDA3QUZGIi8+Cjwvc3ZnPgo=)](https://modelcontextprotocol.io)
+[![smithery badge](https://smithery.ai/badge/@turnono/sevenpace-mcp-server)](https://smithery.ai/server/@turnono/sevenpace-mcp-server)
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-green?logo=node.js)](https://nodejs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue?logo=typescript)](https://www.typescriptlang.org)
@@ -73,14 +74,23 @@ Traditional time tracking tools interrupt your flow. Our MCP server integrates *
 
 ## 🚀 **Quick Start**
 
-### **Option 1: NPX (Recommended)**
+### **Option 1: Smithery (Easiest)**
+
+[![smithery badge](https://smithery.ai/badge/@turnono/sevenpace-mcp-server)](https://smithery.ai/server/@turnono/sevenpace-mcp-server)
+
+```bash
+# Install via Smithery CLI
+npx -y @smithery/cli install @turnono/sevenpace-mcp-server --client claude
+```
+
+### **Option 2: NPX (Direct)**
 
 ```bash
 # Add to your MCP configuration
 npx -y github:turnono/7pace-mcp-server
 ```
 
-### **Option 2: Clone & Build**
+### **Option 3: Clone & Build**
 
 ```bash
 git clone https://github.com/turnono/7pace-mcp-server.git

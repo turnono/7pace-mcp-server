@@ -1,26 +1,99 @@
 # Smithery configuration file: https://smithery.ai/docs/build/project-config
 
+# ✨ STANDOUT METADATA - What makes us unique
+metadata:
+  title: "7pace Timetracker MCP"
+  description: "🚀 Professional time tracking that speaks your language. Track Azure DevOps work items naturally through AI conversations. Zero context switching, enterprise-grade 7pace integration."
+  author: "Labournet DevOps Team"
+  version: "1.0.0"
+  homepage: "https://7pace-mcp.web.app"
+  repository: "https://github.com/turnono/7pace-mcp-server"
+  license: "MIT"
+  tags:
+    - "time-tracking"
+    - "azure-devops"
+    - "7pace"
+    - "productivity"
+    - "enterprise"
+    - "natural-language"
+    - "workflow-automation"
+    - "devops"
+    - "professional"
+    - "work-items"
+    - "reporting"
+    - "analytics"
+  categories:
+    - "productivity"
+    - "enterprise"
+    - "development"
+  keywords:
+    - "time tracking"
+    - "Azure DevOps"
+    - "7pace Timetracker"
+    - "work item tracking"
+    - "developer productivity"
+    - "enterprise time management"
+    - "natural language interface"
+    - "automated logging"
+    - "project management"
+    - "team analytics"
+
+# 🎯 COMPELLING FEATURE HIGHLIGHTS
+features:
+  - "⚡ **Zero Context Switching** - Track time without leaving your editor"
+  - "🗣️ **Natural Language** - 'Log 3 hours on work item 1234 for API work'"
+  - "🔄 **Real-time Sync** - Instant Azure DevOps integration"
+  - "📊 **Smart Reports** - AI-powered time analytics and insights"
+  - "🛡️ **Enterprise Ready** - Secure 7pace Timetracker integration"
+  - "⚙️ **Auto-Resolution** - Smart activity type detection"
+  - "📱 **Universal Access** - Works in Cursor, VS Code, and any MCP client"
+  - "🎯 **Work Item Focus** - Direct integration with Azure DevOps work items"
+
+# 💡 USE CASES THAT RESONATE
+useCases:
+  - "Development teams tracking time on Azure DevOps work items"
+  - "Project managers needing accurate time allocation reports"
+  - "Consultants billing clients for specific work items"
+  - "Team leads analyzing productivity and project progress"
+  - "Developers who want seamless time tracking without workflow interruption"
+
+# 🏆 COMPETITIVE ADVANTAGES
+advantages:
+  - "Only MCP server with native 7pace Timetracker integration"
+  - "Enterprise-grade time tracking through conversational AI"
+  - "Direct Azure DevOps work item mapping"
+  - "Professional reporting and analytics capabilities"
+  - "Zero learning curve - just describe your work naturally"
+
 startCommand:
   type: stdio
   commandFunction:
-    # A JS function that produces the CLI command based on the given config to start the MCP on stdio.
+    # Enterprise-grade configuration with comprehensive environment support
     |-
     (config) => {
       const env = {
         SEVENPACE_ORGANIZATION: config.sevenpaceOrganization,
         SEVENPACE_TOKEN: config.sevenpaceToken
       };
+      
+      // Optional Azure DevOps integration
       if (config.azureDevopsOrgUrl) env.AZURE_DEVOPS_ORG_URL = config.azureDevopsOrgUrl;
       if (config.azureDevopsPat) env.AZURE_DEVOPS_PAT = config.azureDevopsPat;
+      
+      // Advanced configuration options
       if (config.sevenpaceDefaultActivityTypeId) env.SEVENPACE_DEFAULT_ACTIVITY_TYPE_ID = config.sevenpaceDefaultActivityTypeId;
+      if (config.timeZone) env.TZ = config.timeZone;
+      if (config.logLevel) env.LOG_LEVEL = config.logLevel;
+      
       return {
         command: 'node',
         args: ['dist/index.js'],
         env
       };
     }
+
   configSchema:
-    # JSON Schema defining the configuration options for the MCP.
+    # Comprehensive configuration schema for enterprise use
     type: object
     required:
       - sevenpaceOrganization
@@ -28,22 +101,85 @@ startCommand:
     properties:
       sevenpaceOrganization:
         type: string
-        description: 7pace organization name, e.g., "labournet"
+        title: "7pace Organization"
+        description: "Your 7pace organization name (e.g., 'labournet')"
+        examples: ["labournet", "acme-corp", "dev-team"]
       sevenpaceToken:
         type: string
-        description: 7pace API token
+        title: "7pace API Token"
+        description: "Personal API token from 7pace Timetracker settings"
+        format: "password"
       azureDevopsOrgUrl:
         type: string
-        description: Azure DevOps organization URL, e.g., https://dev.azure.com/your-org
+        title: "Azure DevOps Organization URL"
+        description: "Your Azure DevOps organization URL for work item integration"
+        examples:
+          ["https://dev.azure.com/labournet", "https://dev.azure.com/your-org"]
+        format: "uri"
       azureDevopsPat:
         type: string
-        description: Azure DevOps Personal Access Token
+        title: "Azure DevOps Personal Access Token"
+        description: "PAT with work item read permissions (optional but recommended)"
+        format: "password"
       sevenpaceDefaultActivityTypeId:
         type: string
-        description: Default activity type ID to use when resolution by name fails
+        title: "Default Activity Type ID"
+        description: "Fallback activity type when automatic resolution fails (optional)"
+        examples: ["development", "testing", "documentation"]
+      timeZone:
+        type: string
+        title: "Time Zone"
+        description: "Your local time zone for accurate time logging"
+        examples: ["America/New_York", "Europe/London", "Asia/Tokyo"]
+        default: "UTC"
+      logLevel:
+        type: string
+        title: "Log Level"
+        description: "Logging verbosity for troubleshooting"
+        enum: ["error", "warn", "info", "debug"]
+        default: "info"
+
   exampleConfig:
-    sevenpaceOrganization: labournet
-    sevenpaceToken: your_7pace_api_token
-    azureDevopsOrgUrl: https://dev.azure.com/labournet
-    azureDevopsPat: your_azure_devops_pat
-    sevenpaceDefaultActivityTypeId: optional_activity_type_id
+    # Professional example configuration
+    sevenpaceOrganization: "labournet"
+    sevenpaceToken: "your_7pace_api_token_here"
+    azureDevopsOrgUrl: "https://dev.azure.com/labournet"
+    azureDevopsPat: "your_azure_devops_pat_here"
+    sevenpaceDefaultActivityTypeId: "development"
+    timeZone: "America/New_York"
+    logLevel: "info"
+
+# 🎨 SMITHERY-SPECIFIC OPTIMIZATIONS
+smithery:
+  quickSetup: true
+  openSource: true
+  local: true
+  tools: 5
+
+  # Compelling one-liner for search results
+  tagline: "Enterprise time tracking through natural AI conversations"
+
+  # SEO-optimized description for Smithery directory
+  searchDescription: "Professional 7pace Timetracker integration for Azure DevOps. Track time naturally with AI - no forms, no context switching. Enterprise-ready with real-time sync and smart reporting."
+
+  # What makes us special in the directory
+  highlights:
+    - "🏢 **Enterprise Grade** - 7pace Timetracker integration"
+    - "⚡ **Zero Friction** - Natural language time entry"
+    - "🔄 **Live Sync** - Real-time Azure DevOps updates"
+    - "📊 **Smart Analytics** - AI-powered insights"
+    - "🛡️ **Secure** - Professional-grade authentication"
+
+  # Smithery category optimization
+  primaryCategory: "productivity"
+  secondaryCategories: ["enterprise", "development", "analytics"]
+
+  # Installation difficulty (helps with user expectations)
+  setupComplexity: "moderate" # Due to API tokens required
+
+  # Target audience clarity
+  targetUsers:
+    - "Development teams using Azure DevOps"
+    - "Project managers tracking work item progress"
+    - "Consultants needing detailed time billing"
+    - "Team leads analyzing productivity metrics"
