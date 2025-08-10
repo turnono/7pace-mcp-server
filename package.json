@@ -1,8 +1,16 @@
 {
   "name": "7pace-mcp-server",
   "version": "1.0.0",
-  "description": "MCP server for 7pace Timetracker integration with Azure DevOps",
+  "description": "🚀 AI-powered time tracking MCP server for 7pace Timetracker & Azure DevOps. Track time naturally with Claude AI using conversational commands. Zero context switching, real-time sync.",
   "main": "dist/index.js",
+  "homepage": "https://github.com/turnono/7pace-mcp-server#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/turnono/7pace-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/turnono/7pace-mcp-server/issues"
+  },
   "bin": {
     "7pace-mcp-server": "dist/index.js"
   },
@@ -16,12 +24,32 @@
   },
   "keywords": [
     "mcp",
+    "model-context-protocol",
+    "claude-ai",
     "7pace",
     "timetracker",
+    "time-tracking",
     "azure-devops",
-    "time-tracking"
+    "devops",
+    "productivity",
+    "ai-tools",
+    "natural-language",
+    "workflow-automation",
+    "developer-tools",
+    "typescript",
+    "azure",
+    "microsoft",
+    "work-items",
+    "reporting",
+    "analytics",
+    "cursor-ide",
+    "vscode"
   ],
-  "author": "Labournet DevOps Team",
+  "author": {
+    "name": "Labournet DevOps Team",
+    "email": "devops@labournet.com",
+    "url": "https://github.com/turnono"
+  },
   "license": "MIT",
   "type": "commonjs",
   "engines": {
@@ -30,7 +58,8 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "env.example"
   ],
   "publishConfig": {
     "access": "public"
@@ -42,5 +71,19 @@
     "dotenv": "^17.2.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2"
-  }
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/turnono"
+  },
+  "preferGlobal": false,
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ]
 }
