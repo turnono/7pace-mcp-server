@@ -76,6 +76,8 @@ class SevenPaceService {
         Authorization: `Bearer ${config.token}`,
         "Content-Type": "application/json",
       },
+      timeout: 15000, // 15 second timeout for all requests
+      validateStatus: (status) => status < 500, // Accept 4xx errors (don't throw)
     });
   }
 
@@ -155,8 +157,37 @@ class SevenPaceService {
         "/api/rest/worklogs?api-version=3.2",
         worklog
       );
+
+      // Check for API errors even with 2xx status
+      if (response.status >= 400) {
+        throw new McpError(
+          ErrorCode.InternalError,
+          `7pace API error (${response.status}): ${
+            response.statusText
+          } - ${JSON.stringify(response.data)}`
+        );
+      }
+
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
+      // Handle axios timeout specifically
+      if (error?.code === "ECONNABORTED") {
+        throw new McpError(
+          ErrorCode.InternalError,
+          "Request timed out after 15 seconds. 7pace API may be slow or unavailable."
+        );
+      }
+
+      // Handle axios errors
+      if (error?.response) {
+        throw new McpError(
+          ErrorCode.InternalError,
+          `7pace API error (${error.response.status}): ${
+            error.response.statusText
+          } - ${JSON.stringify(error.response.data)}`
+        );
+      }
+
       throw new McpError(
         ErrorCode.InternalError,
         `Failed to log time: ${
@@ -316,11 +347,13 @@ class SevenPaceMCPServer {
 
     if (!config.token || !config.organizationName) {
       // In development/testing mode, warn but don't fail immediately
-      if (config.token === "test-token-replace-with-real-token" || 
-          config.organizationName === "test-org") {
+      if (
+        config.token === "test-token-replace-with-real-token" ||
+        config.organizationName === "test-org"
+      ) {
         console.error(
           "⚠️  Warning: Using test credentials. MCP server will start but API calls will fail.\n" +
-          "   For real testing, update .env file with actual SEVENPACE_TOKEN and SEVENPACE_ORGANIZATION values."
+            "   For real testing, update .env file with actual SEVENPACE_TOKEN and SEVENPACE_ORGANIZATION values."
         );
       } else {
         throw new Error(
