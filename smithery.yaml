@@ -81,7 +81,6 @@ startCommand:
       if (config.azureDevopsPat) env.AZURE_DEVOPS_PAT = config.azureDevopsPat;
       
       // Advanced configuration options
-      if (config.sevenpaceDefaultActivityTypeId) env.SEVENPACE_DEFAULT_ACTIVITY_TYPE_ID = config.sevenpaceDefaultActivityTypeId;
       if (config.timeZone) env.TZ = config.timeZone;
       if (config.logLevel) env.LOG_LEVEL = config.logLevel;
       
@@ -121,11 +120,6 @@ startCommand:
         title: "Azure DevOps Personal Access Token"
         description: "PAT with work item read permissions (optional but recommended)"
         format: "password"
-      sevenpaceDefaultActivityTypeId:
-        type: string
-        title: "Default Activity Type ID"
-        description: "Fallback activity type when automatic resolution fails (optional)"
-        examples: ["development", "testing", "documentation"]
       timeZone:
         type: string
         title: "Time Zone"
@@ -145,7 +139,6 @@ startCommand:
     sevenpaceToken: "your_7pace_api_token_here"
     azureDevopsOrgUrl: "https://dev.azure.com/labournet"
     azureDevopsPat: "your_azure_devops_pat_here"
-    sevenpaceDefaultActivityTypeId: "development"
     timeZone: "America/New_York"
     logLevel: "info"
 

@@ -2,7 +2,7 @@
 
 # 🚀 7pace Timetracker MCP Server
 
-**Supercharge your Azure DevOps workflow with intelligent time tracking through Claude AI**
+- **Supercharge your Azure DevOps workflow with intelligent time tracking through AI assistants**
 
 [![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-blue?logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMSA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDMgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSIjMDA3QUZGIi8+Cjwvc3ZnPgo=)](https://modelcontextprotocol.io)
 [![smithery badge](https://smithery.ai/badge/@turnono/sevenpace-mcp-server)](https://smithery.ai/server/@turnono/sevenpace-mcp-server)
@@ -190,6 +190,8 @@ Top Work Items: #1234 (8hrs), #5678 (6hrs)
 - `description` (string): Work description
 - `activityType` (string, optional): Activity type name or ID
 
+Note: The server calls 7pace using `date`, `length` and `billableLength` (seconds) with `comment`. You only provide `hours`; conversion is handled for you.
+
 **Example:**
 
 ```typescript
@@ -198,7 +200,6 @@ await log_time({
   date: "2024-01-15",
   hours: 2.5,
   description: "API endpoint development",
-  activityType: "Development",
 });
 ```
 
@@ -221,6 +222,19 @@ await get_worklogs({
   endDate: "2024-01-31",
   workItemId: 1234,
 });
+```
+
+</details>
+
+<details>
+<summary><strong>📘 list_activity_types</strong> - List available 7pace activity types</strong></summary>
+
+Returns a text list of activity type IDs and names from 7pace so you can pick a valid GUID if your org requires it.
+
+```typescript
+await list_activity_types();
+// → 00000000-0000-0000-0000-000000000001  -  Development
+//   00000000-0000-0000-0000-000000000002  -  Testing
 ```
 
 </details>
@@ -278,7 +292,8 @@ export SEVENPACE_TOKEN="your-api-token"
 # Optional
 export AZURE_DEVOPS_ORG_URL="https://dev.azure.com/your-org"
 export AZURE_DEVOPS_PAT="your-devops-pat"
-export SEVENPACE_DEFAULT_ACTIVITY_TYPE_ID="default-activity-id"
+# Increase write timeout (ms) for slow networks (default 30000)
+export SEVENPACE_WRITE_TIMEOUT_MS=45000
 ```
 
 ### **3. Test Your Setup**
