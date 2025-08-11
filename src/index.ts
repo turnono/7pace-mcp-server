@@ -155,7 +155,10 @@ class SevenPaceService {
     try {
       const response = await this.client.post(
         "/api/rest/worklogs?api-version=3.2",
-        worklog
+        worklog,
+        {
+          timeout: Number(process.env.SEVENPACE_WRITE_TIMEOUT_MS) || 30000,
+        }
       );
 
       // Check for API errors even with 2xx status
