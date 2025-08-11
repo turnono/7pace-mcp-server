@@ -17,3 +17,8 @@ yarn-error.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# Test files (temporary)
+test-write-issue.js
+test-response-validation.js
+test-write-failure-fix.js

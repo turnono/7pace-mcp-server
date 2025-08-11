@@ -171,7 +171,33 @@ class SevenPaceService {
         );
       }
 
-      return response.data;
+      // Validate that the worklog was actually created
+      const responseData = response.data;
+      if (!responseData) {
+        throw new McpError(
+          ErrorCode.InternalError,
+          "7pace API returned empty response - worklog creation may have failed"
+        );
+      }
+
+      // Check for explicit error indicators in response
+      if (responseData.error || responseData.success === false) {
+        throw new McpError(
+          ErrorCode.InternalError,
+          `7pace API returned error: ${JSON.stringify(responseData)}`
+        );
+      }
+
+      // Verify that a worklog ID was returned (indicating successful creation)
+      const worklogId = responseData.id || responseData.Id;
+      if (!worklogId) {
+        throw new McpError(
+          ErrorCode.InternalError,
+          `7pace API did not return a worklog ID - creation may have failed. Response: ${JSON.stringify(responseData)}`
+        );
+      }
+
+      return responseData;
     } catch (error: any) {
       // Handle axios timeout specifically
       if (error?.code === "ECONNABORTED") {
@@ -268,7 +294,35 @@ class SevenPaceService {
         `/api/rest/worklogs/${worklogId}?api-version=3.2`,
         worklog
       );
-      return response.data;
+
+      // Check for API errors even with 2xx status
+      if (response.status >= 400) {
+        throw new McpError(
+          ErrorCode.InternalError,
+          `7pace API error (${response.status}): ${
+            response.statusText
+          } - ${JSON.stringify(response.data)}`
+        );
+      }
+
+      // Validate the response indicates successful update
+      const responseData = response.data;
+      if (!responseData) {
+        throw new McpError(
+          ErrorCode.InternalError,
+          "7pace API returned empty response - worklog update may have failed"
+        );
+      }
+
+      // Check for explicit error indicators in response
+      if (responseData.error || responseData.success === false) {
+        throw new McpError(
+          ErrorCode.InternalError,
+          `7pace API returned error: ${JSON.stringify(responseData)}`
+        );
+      }
+
+      return responseData;
     } catch (error) {
       throw new McpError(
         ErrorCode.InternalError,
@@ -281,10 +335,33 @@ class SevenPaceService {
 
   async deleteWorklog(worklogId: string): Promise<void> {
     try {
-      await this.client.delete(
+      const response = await this.client.delete(
         `/api/rest/worklogs/${worklogId}?api-version=3.2`
       );
+
+      // Check for API errors even with 2xx status
+      if (response.status >= 400) {
+        throw new McpError(
+          ErrorCode.InternalError,
+          `7pace API error (${response.status}): ${
+            response.statusText
+          } - ${JSON.stringify(response.data)}`
+        );
+      }
+
+      // For delete operations, some APIs return error information in response body
+      const responseData = response.data;
+      if (responseData && (responseData.error || responseData.success === false)) {
+        throw new McpError(
+          ErrorCode.InternalError,
+          `7pace API returned error: ${JSON.stringify(responseData)}`
+        );
+      }
     } catch (error) {
+      // Re-throw McpError instances as-is
+      if (error instanceof McpError) {
+        throw error;
+      }
       throw new McpError(
         ErrorCode.InternalError,
         `Failed to delete worklog: ${
