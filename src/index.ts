@@ -119,8 +119,6 @@ class SevenPaceService {
   private async resolveActivityTypeId(
     input?: string
   ): Promise<string | undefined> {
-    const defaultNameOrId = process.env.SEVENPACE_DEFAULT_ACTIVITY_TYPE_ID;
-
     // Helper to resolve a name to ID via API
     const resolveByName = async (name: string): Promise<string | undefined> => {
       try {
@@ -134,25 +132,15 @@ class SevenPaceService {
       }
     };
 
-    // 1) If caller provided a value
+    // Only honor explicit input; do not fall back to env defaults
     if (input && input.trim().length > 0) {
       if (isGuidLike(input)) return input; // already an ID
       const byName = await resolveByName(input);
       if (byName) return byName;
-      // fall through to default handling if provided input couldn't be resolved
+      return undefined; // invalid input; omit activityTypeId
     }
 
-    // 2) If no input or input couldn't be resolved, try default env
-    if (defaultNameOrId && defaultNameOrId.trim().length > 0) {
-      if (isGuidLike(defaultNameOrId)) return defaultNameOrId; // valid GUID default
-      const byName = await resolveByName(defaultNameOrId);
-      if (byName) return byName;
-      // If neither GUID nor resolvable name, ignore (avoid sending invalid value)
-      return undefined;
-    }
-
-    // 3) No input and no default
-    return undefined;
+    return undefined; // no input
   }
 
   async logTime(entry: TimeEntry): Promise<any> {
@@ -215,7 +203,9 @@ class SevenPaceService {
       if (!worklogId) {
         throw new McpError(
           ErrorCode.InternalError,
-          `7pace API did not return a worklog ID - creation may have failed. Response: ${JSON.stringify(responseData)}`
+          `7pace API did not return a worklog ID - creation may have failed. Response: ${JSON.stringify(
+            responseData
+          )}`
         );
       }
 
@@ -373,7 +363,10 @@ class SevenPaceService {
 
       // For delete operations, some APIs return error information in response body
       const responseData = response.data;
-      if (responseData && (responseData.error || responseData.success === false)) {
+      if (
+        responseData &&
+        (responseData.error || responseData.success === false)
+      ) {
         throw new McpError(
           ErrorCode.InternalError,
           `7pace API returned error: ${JSON.stringify(responseData)}`
