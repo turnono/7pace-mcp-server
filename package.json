@@ -1,6 +1,6 @@
 {
   "name": "7pace-mcp-server",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "🚀 AI-powered time tracking MCP server for 7pace Timetracker & Azure DevOps. Track time naturally with Claude AI using conversational commands. Zero context switching, real-time sync.",
   "main": "dist/index.js",
   "homepage": "https://github.com/turnono/7pace-mcp-server#readme",
