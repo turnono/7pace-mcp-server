@@ -119,6 +119,8 @@ class SevenPaceService {
   private async resolveActivityTypeId(
     input?: string
   ): Promise<string | undefined> {
+    const defaultNameOrId = process.env.SEVENPACE_DEFAULT_ACTIVITY_TYPE_ID;
+
     // Helper to resolve a name to ID via API
     const resolveByName = async (name: string): Promise<string | undefined> => {
       try {
@@ -132,15 +134,24 @@ class SevenPaceService {
       }
     };
 
-    // Only honor explicit input; do not fall back to env defaults
+    // 1) Prefer explicit input
     if (input && input.trim().length > 0) {
       if (isGuidLike(input)) return input; // already an ID
       const byName = await resolveByName(input);
       if (byName) return byName;
-      return undefined; // invalid input; omit activityTypeId
+      // if explicit cannot be resolved, fall back to default if valid
     }
 
-    return undefined; // no input
+    // 2) Fallback to safe default if configured
+    if (defaultNameOrId && defaultNameOrId.trim().length > 0) {
+      if (isGuidLike(defaultNameOrId)) return defaultNameOrId; // GUID default
+      const byName = await resolveByName(defaultNameOrId);
+      if (byName) return byName;
+      return undefined; // invalid default -> omit
+    }
+
+    // 3) No activity type
+    return undefined;
   }
 
   async logTime(entry: TimeEntry): Promise<any> {
