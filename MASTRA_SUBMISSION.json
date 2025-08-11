@@ -1,0 +1,39 @@
+{
+  "name": "7pace Timetracker MCP",
+  "package": "7pace-mcp-server",
+  "npm": "https://www.npmjs.com/package/7pace-mcp-server",
+  "version": "1.0.6",
+  "description": "Professional 7pace Timetracker integration for Azure DevOps via MCP. Natural-language time tracking with zero context switching.",
+  "categories": ["productivity", "developer-tools"],
+  "tags": [
+    "model context protocol",
+    "mcp",
+    "azure devops",
+    "7pace",
+    "time tracking",
+    "work items",
+    "reporting"
+  ],
+  "homepage": "https://7pace-mcp.web.app",
+  "repository": "https://github.com/turnono/7pace-mcp-server",
+  "license": "MIT",
+  "author": "Labournet DevOps Team",
+  "logo": "public/icon.svg",
+  "installation": {
+    "smithery": "npx -y @smithery/cli install @turnono/sevenpace-mcp-server --client claude",
+    "npm": "npx -y github:turnono/7pace-mcp-server"
+  },
+  "configuration": {
+    "required": ["SEVENPACE_ORGANIZATION", "SEVENPACE_TOKEN"],
+    "optional": [
+      "AZURE_DEVOPS_ORG_URL",
+      "AZURE_DEVOPS_PAT",
+      "SEVENPACE_WRITE_TIMEOUT_MS"
+    ],
+    "examples": {
+      "SEVENPACE_ORGANIZATION": "labournet",
+      "SEVENPACE_TOKEN": "***",
+      "SEVENPACE_WRITE_TIMEOUT_MS": 45000
+    }
+  }
+}
