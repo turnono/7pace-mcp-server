@@ -74,6 +74,10 @@ class SevenPaceService {
     items: ActivityType[];
   } | null = null;
 
+  public async listActivityTypes(): Promise<ActivityType[]> {
+    return this.fetchActivityTypes();
+  }
+
   constructor(config: SevenPaceConfig) {
     this.config = config;
     this.client = axios.create({
@@ -497,6 +501,15 @@ class SevenPaceMCPServer {
             },
           },
           {
+            name: "list_activity_types",
+            description: "List available 7pace activity types (name and id)",
+            inputSchema: {
+              type: "object",
+              properties: {},
+              required: [],
+            },
+          },
+          {
             name: "get_worklogs",
             description: "Retrieve time logs from 7pace Timetracker",
             inputSchema: {
@@ -589,6 +602,8 @@ class SevenPaceMCPServer {
         switch (request.params.name) {
           case "log_time":
             return await this.handleLogTime(request.params.arguments);
+          case "list_activity_types":
+            return await this.handleListActivityTypes();
           case "get_worklogs":
             return await this.handleGetWorklogs(request.params.arguments);
           case "update_worklog":
@@ -666,6 +681,19 @@ class SevenPaceMCPServer {
             `Hours: ${entry.hours}\n` +
             `Description: ${entry.description}\n` +
             `Worklog ID: ${result.id || result.Id || "N/A"}`,
+        },
+      ],
+    };
+  }
+
+  private async handleListActivityTypes() {
+    const items = await this.sevenPaceService.listActivityTypes();
+    const lines = items.map((t) => `${t.id}  -  ${t.name}`).join("\n");
+    return {
+      content: [
+        {
+          type: "text",
+          text: lines.length ? lines : "No activity types found",
         },
       ],
     };
