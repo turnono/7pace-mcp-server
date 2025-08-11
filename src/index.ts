@@ -117,11 +117,6 @@ class SevenPaceService {
     if (!input && explicitDefault) return explicitDefault;
     if (!input) return undefined;
 
-    // Skip activity type resolution for test credentials to prevent hanging
-    if (this.config.token === "test-token-replace-with-real-token") {
-      return undefined;
-    }
-
     // If input looks like a GUID, assume it's already an ID
     if (/^[0-9a-fA-F-]{8,}$/.test(input)) return input;
 
@@ -350,17 +345,7 @@ class SevenPaceMCPServer {
       organizationName: process.env.SEVENPACE_ORGANIZATION || "",
     };
 
-    // Check for test credentials first
-    if (
-      config.token === "test-token-replace-with-real-token" ||
-      config.organizationName === "test-org"
-    ) {
-      console.error(
-        "⚠️  Warning: Using test credentials. MCP server will start but API calls will fail.\n" +
-          "   For real testing, update .env file with actual SEVENPACE_TOKEN and SEVENPACE_ORGANIZATION values."
-      );
-    } else if (!config.token || !config.organizationName) {
-      // Only throw error if not using test credentials and values are missing
+    if (!config.token || !config.organizationName) {
       throw new Error(
         "Missing required environment variables: SEVENPACE_TOKEN and SEVENPACE_ORGANIZATION"
       );
