@@ -54,6 +54,12 @@ function isPositiveInteger(value: unknown): value is number {
   return isPositiveNumber(value) && Number.isInteger(value);
 }
 
+function isGuidLike(value: string | undefined | null): boolean {
+  if (!value) return false;
+  // Strict GUID format xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  return /^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/.test(value);
+}
+
 function computeHoursFromApiLength(length: number): number {
   // Heuristic: REST list often returns seconds; create/update uses minutes.
   // If the number is large (>= 1000), assume seconds; else minutes.
@@ -113,24 +119,40 @@ class SevenPaceService {
   private async resolveActivityTypeId(
     input?: string
   ): Promise<string | undefined> {
-    const explicitDefault = process.env.SEVENPACE_DEFAULT_ACTIVITY_TYPE_ID;
-    if (!input && explicitDefault) return explicitDefault;
-    if (!input) return undefined;
+    const defaultNameOrId = process.env.SEVENPACE_DEFAULT_ACTIVITY_TYPE_ID;
 
-    // If input looks like a GUID, assume it's already an ID
-    if (/^[0-9a-fA-F-]{8,}$/.test(input)) return input;
+    // Helper to resolve a name to ID via API
+    const resolveByName = async (name: string): Promise<string | undefined> => {
+      try {
+        const list = await this.fetchActivityTypes();
+        const match = list.find(
+          (t) => t.name.toLowerCase() === name.toLowerCase()
+        );
+        return match?.id;
+      } catch {
+        return undefined;
+      }
+    };
 
-    try {
-      const list = await this.fetchActivityTypes();
-      const match = list.find(
-        (t) => t.name.toLowerCase() === input.toLowerCase()
-      );
-      if (match) return match.id;
-    } catch {
-      // Ignore resolution errors, fall back to default/env
+    // 1) If caller provided a value
+    if (input && input.trim().length > 0) {
+      if (isGuidLike(input)) return input; // already an ID
+      const byName = await resolveByName(input);
+      if (byName) return byName;
+      // fall through to default handling if provided input couldn't be resolved
     }
 
-    return explicitDefault;
+    // 2) If no input or input couldn't be resolved, try default env
+    if (defaultNameOrId && defaultNameOrId.trim().length > 0) {
+      if (isGuidLike(defaultNameOrId)) return defaultNameOrId; // valid GUID default
+      const byName = await resolveByName(defaultNameOrId);
+      if (byName) return byName;
+      // If neither GUID nor resolvable name, ignore (avoid sending invalid value)
+      return undefined;
+    }
+
+    // 3) No input and no default
+    return undefined;
   }
 
   async logTime(entry: TimeEntry): Promise<any> {
