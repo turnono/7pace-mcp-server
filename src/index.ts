@@ -158,17 +158,19 @@ class SevenPaceService {
 
     const activityTypeId = await this.resolveActivityTypeId(entry.activityType);
 
-    const worklog: WorklogEntry = {
+    // Build payload matching the working cURL (date, length seconds, billableLength seconds)
+    const worklog: any = {
       workItemId: entry.workItemId,
-      timestamp: `${entry.date}T00:00:00`,
-      length: entry.hours * 3600, // create expects seconds
+      date: entry.date,
+      length: Math.round(entry.hours * 3600),
+      billableLength: Math.round(entry.hours * 3600),
       comment: entry.description,
       ...(activityTypeId ? { activityTypeId } : {}),
     };
 
     try {
       const response = await this.client.post(
-        "/api/rest/worklogs?api-version=3.2",
+        "/api/rest/workLogs?api-version=3.2",
         worklog,
         {
           timeout: Number(process.env.SEVENPACE_WRITE_TIMEOUT_MS) || 30000,
@@ -190,26 +192,15 @@ class SevenPaceService {
       if (!responseData) {
         throw new McpError(
           ErrorCode.InternalError,
-          "7pace API returned empty response - worklog creation may have failed"
+          "7pace API returned empty response when creating worklog"
         );
       }
 
-      // Check for explicit error indicators in response
+      // If API returns error-like body, surface it
       if (responseData.error || responseData.success === false) {
         throw new McpError(
           ErrorCode.InternalError,
-          `7pace API returned error: ${JSON.stringify(responseData)}`
-        );
-      }
-
-      // Verify that a worklog ID was returned (indicating successful creation)
-      const worklogId = responseData.id || responseData.Id;
-      if (!worklogId) {
-        throw new McpError(
-          ErrorCode.InternalError,
-          `7pace API did not return a worklog ID - creation may have failed. Response: ${JSON.stringify(
-            responseData
-          )}`
+          `7pace API error body: ${JSON.stringify(responseData)}`
         );
       }
 
@@ -219,11 +210,9 @@ class SevenPaceService {
       if (error?.code === "ECONNABORTED") {
         throw new McpError(
           ErrorCode.InternalError,
-          "Request timed out after 15 seconds. 7pace API may be slow or unavailable."
+          "Request timed out. 7pace API may be slow or unavailable."
         );
       }
-
-      // Handle axios errors
       if (error?.response) {
         throw new McpError(
           ErrorCode.InternalError,
@@ -232,7 +221,6 @@ class SevenPaceService {
           } - ${JSON.stringify(error.response.data)}`
         );
       }
-
       throw new McpError(
         ErrorCode.InternalError,
         `Failed to log time: ${
