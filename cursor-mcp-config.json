@@ -12,6 +12,15 @@
         "AZURE_DEVOPS_ORG_URL": "https://dev.azure.com/labournet",
         "AZURE_DEVOPS_PAT": "your_azure_devops_pat_here"
       }
+    },
+    "jira": {
+      "command": "node",
+      "args": ["./jira-mcp-server/dist/index.js"],
+      "env": {
+        "JIRA_BASE_URL": "https://your-domain.atlassian.net",
+        "JIRA_EMAIL": "your-email@example.com",
+        "JIRA_API_TOKEN": "your_jira_api_token_here"
+      }
     }
   }
 }

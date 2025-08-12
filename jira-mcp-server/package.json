@@ -1,0 +1,65 @@
+{
+  "name": "jira-mcp-server",
+  "version": "1.0.0",
+  "description": "🚀 AI-powered MCP server for Atlassian Jira. Manage issues and log work naturally with Claude AI.",
+  "main": "dist/index.js",
+  "homepage": "https://github.com/turnono/jira-mcp-server#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/turnono/jira-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/turnono/jira-mcp-server/issues"
+  },
+  "bin": {
+    "jira-mcp-server": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "claude-ai",
+    "jira",
+    "atlassian",
+    "issue-tracking",
+    "project-management",
+    "productivity",
+    "ai-tools",
+    "natural-language",
+    "workflow-automation",
+    "developer-tools",
+    "typescript"
+  ],
+  "author": {
+    "name": "Labournet DevOps Team",
+    "email": "devops@labournet.com",
+    "url": "https://github.com/turnono"
+  },
+  "license": "MIT",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "env.example"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.1",
+    "@types/node": "^24.2.0",
+    "axios": "^1.11.0",
+    "dotenv": "^17.2.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  }
+}
