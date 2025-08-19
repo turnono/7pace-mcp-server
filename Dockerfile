@@ -9,5 +9,7 @@ COPY src ./src
 RUN npm install --ignore-scripts && npm run build
 
 ENV NODE_ENV=production
+ENV SEVENPACE_ORGANIZATION=example
+ENV SEVENPACE_TOKEN=test-token-replace-with-real-token
 
 CMD ["node", "dist/index.js"]
