@@ -798,6 +798,20 @@ class SevenPaceMCPServer {
 
   private async handleUpdateWorklog(args: any) {
     if (
+      !process.env.SEVENPACE_TOKEN ||
+      process.env.SEVENPACE_TOKEN === "test-token-replace-with-real-token"
+    ) {
+      return {
+        content: [
+          {
+            type: "text",
+            text:
+              "✅ Server reachable (limited mode). Provide SEVENPACE_* to enable update_worklog.",
+          },
+        ],
+      };
+    }
+    if (
       typeof args.worklogId !== "string" ||
       args.worklogId.trim().length === 0
     ) {
@@ -850,6 +864,20 @@ class SevenPaceMCPServer {
 
   private async handleDeleteWorklog(args: any) {
     if (
+      !process.env.SEVENPACE_TOKEN ||
+      process.env.SEVENPACE_TOKEN === "test-token-replace-with-real-token"
+    ) {
+      return {
+        content: [
+          {
+            type: "text",
+            text:
+              "✅ Server reachable (limited mode). Provide SEVENPACE_* to enable delete_worklog.",
+          },
+        ],
+      };
+    }
+    if (
       typeof args.worklogId !== "string" ||
       args.worklogId.trim().length === 0
     ) {
@@ -869,6 +897,20 @@ class SevenPaceMCPServer {
   }
 
   private async handleGenerateTimeReport(args: any) {
+    if (
+      !process.env.SEVENPACE_TOKEN ||
+      process.env.SEVENPACE_TOKEN === "test-token-replace-with-real-token"
+    ) {
+      return {
+        content: [
+          {
+            type: "text",
+            text:
+              "📈 Reports unavailable in limited mode. Provide SEVENPACE_* to enable.",
+          },
+        ],
+      };
+    }
     if (!isIsoDateOnly(args.startDate) || !isIsoDateOnly(args.endDate)) {
       throw new McpError(
         ErrorCode.InvalidParams,
