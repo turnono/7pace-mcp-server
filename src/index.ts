@@ -984,7 +984,25 @@ class SevenPaceMCPServer {
         sessionIdGenerator: undefined,
       });
       await this.server.connect(transport as any);
+
+      const applyConfigFromQuery = (q: any) => {
+        if (!q) return;
+        const setIf = (key: string, envKey: string) => {
+          const v = (q as any)[key];
+          if (typeof v === "string" && v.length > 0) process.env[envKey] = v;
+        };
+        setIf("sevenpaceOrganization", "SEVENPACE_ORGANIZATION");
+        setIf("sevenpaceToken", "SEVENPACE_TOKEN");
+        setIf("azureDevopsOrgUrl", "AZURE_DEVOPS_ORG_URL");
+        setIf("azureDevopsPat", "AZURE_DEVOPS_PAT");
+        setIf("timeZone", "TZ");
+        setIf("logLevel", "LOG_LEVEL");
+      };
+
       app.post("/mcp", (req: any, res: any) => {
+        try {
+          applyConfigFromQuery(req.query);
+        } catch {}
         transport.handleRequest(req, res, req.body).catch((err: any) => {
           console.error("HTTP transport error:", err);
           if (!res.headersSent)
