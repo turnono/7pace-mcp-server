@@ -805,8 +805,7 @@ class SevenPaceMCPServer {
         content: [
           {
             type: "text",
-            text:
-              "✅ Server reachable (limited mode). Provide SEVENPACE_* to enable update_worklog.",
+            text: "✅ Server reachable (limited mode). Provide SEVENPACE_* to enable update_worklog.",
           },
         ],
       };
@@ -871,8 +870,7 @@ class SevenPaceMCPServer {
         content: [
           {
             type: "text",
-            text:
-              "✅ Server reachable (limited mode). Provide SEVENPACE_* to enable delete_worklog.",
+            text: "✅ Server reachable (limited mode). Provide SEVENPACE_* to enable delete_worklog.",
           },
         ],
       };
@@ -905,8 +903,7 @@ class SevenPaceMCPServer {
         content: [
           {
             type: "text",
-            text:
-              "📈 Reports unavailable in limited mode. Provide SEVENPACE_* to enable.",
+            text: "📈 Reports unavailable in limited mode. Provide SEVENPACE_* to enable.",
           },
         ],
       };
