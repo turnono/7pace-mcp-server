@@ -447,6 +447,15 @@ class SevenPaceMCPServer {
       return {
         tools: [
           {
+            name: "health",
+            description: "Simple health check for deployment scanners",
+            inputSchema: {
+              type: "object",
+              properties: {},
+              required: [],
+            },
+          },
+          {
             name: "log_time",
             description:
               "Log time entry to 7pace Timetracker for a specific work item",
@@ -577,6 +586,15 @@ class SevenPaceMCPServer {
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       try {
         switch (request.params.name) {
+          case "health":
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: "✅ 7pace MCP server is healthy and reachable",
+                },
+              ],
+            };
           case "log_time":
             return await this.handleLogTime(request.params.arguments);
           case "list_activity_types":
