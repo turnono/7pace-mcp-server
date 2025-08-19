@@ -1,6 +1,12 @@
 # Smithery configuration file: https://smithery.ai/docs/build/project-config
 
 # ✨ STANDOUT METADATA - What makes us unique
+runtime: "container"
+
+build:
+  dockerfile: "Dockerfile"
+  dockerBuildPath: "."
+
 metadata:
   title: "7pace Timetracker MCP"
   description: "🚀 Professional time tracking that speaks your language. Track Azure DevOps work items naturally through AI conversations. Zero context switching, enterprise-grade 7pace integration."
@@ -66,30 +72,53 @@ advantages:
   - "Zero learning curve - just describe your work naturally"
 
 startCommand:
-  type: stdio
-  commandFunction:
-    # Enterprise-grade configuration with comprehensive environment support
-    |-
-    (config) => {
-      const env = {
-        SEVENPACE_ORGANIZATION: config.sevenpaceOrganization,
-        SEVENPACE_TOKEN: config.sevenpaceToken
-      };
-      
-      // Optional Azure DevOps integration
-      if (config.azureDevopsOrgUrl) env.AZURE_DEVOPS_ORG_URL = config.azureDevopsOrgUrl;
-      if (config.azureDevopsPat) env.AZURE_DEVOPS_PAT = config.azureDevopsPat;
-      
-      // Advanced configuration options
-      if (config.timeZone) env.TZ = config.timeZone;
-      if (config.logLevel) env.LOG_LEVEL = config.logLevel;
-      
-      return {
-        command: 'node',
-        args: ['dist/index.js'],
-        env
-      };
-    }
+  type: http
+  configSchema:
+    type: object
+    required:
+      - sevenpaceOrganization
+      - sevenpaceToken
+    properties:
+      sevenpaceOrganization:
+        type: string
+        title: "7pace Organization"
+        description: "Your 7pace organization name (e.g., 'labournet')"
+        examples: ["labournet", "acme-corp", "dev-team"]
+      sevenpaceToken:
+        type: string
+        title: "7pace API Token"
+        description: "Personal API token from 7pace Timetracker settings"
+        format: "password"
+      azureDevopsOrgUrl:
+        type: string
+        title: "Azure DevOps Organization URL"
+        description: "Your Azure DevOps organization URL for work item integration"
+        examples: ["https://dev.azure.com/labournet", "https://dev.azure.com/your-org"]
+        format: "uri"
+      azureDevopsPat:
+        type: string
+        title: "Azure DevOps Personal Access Token"
+        description: "PAT with work item read permissions (optional but recommended)"
+        format: "password"
+      timeZone:
+        type: string
+        title: "Time Zone"
+        description: "Your local time zone for accurate time logging"
+        examples: ["America/New_York", "Europe/London", "Asia/Tokyo"]
+        default: "UTC"
+      logLevel:
+        type: string
+        title: "Log Level"
+        description: "Logging verbosity for troubleshooting"
+        enum: ["error", "warn", "info", "debug"]
+        default: "info"
+  exampleConfig:
+    sevenpaceOrganization: "labournet"
+    sevenpaceToken: "your_7pace_api_token_here"
+    azureDevopsOrgUrl: "https://dev.azure.com/labournet"
+    azureDevopsPat: "your_azure_devops_pat_here"
+    timeZone: "America/New_York"
+    logLevel: "info"
 
   configSchema:
     # Comprehensive configuration schema for enterprise use
