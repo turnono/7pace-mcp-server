@@ -705,8 +705,7 @@ class SevenPaceMCPServer {
         content: [
           {
             type: "text",
-            text:
-              "No activity types available in limited mode. Set SEVENPACE_ORGANIZATION and SEVENPACE_TOKEN to enable.",
+            text: "No activity types available in limited mode. Set SEVENPACE_ORGANIZATION and SEVENPACE_TOKEN to enable.",
           },
         ],
       };
@@ -732,8 +731,7 @@ class SevenPaceMCPServer {
         content: [
           {
             type: "text",
-            text:
-              "📄 Worklogs unavailable in limited mode. Provide SEVENPACE_ORGANIZATION and SEVENPACE_TOKEN.",
+            text: "📄 Worklogs unavailable in limited mode. Provide SEVENPACE_ORGANIZATION and SEVENPACE_TOKEN.",
           },
         ],
       };
