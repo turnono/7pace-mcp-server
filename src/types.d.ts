@@ -6,5 +6,3 @@ declare module "@modelcontextprotocol/sdk/server/streamableHttp.js" {
     handleRequest: (req: any, res: any, body: any) => Promise<void>;
   }
 }
-
-

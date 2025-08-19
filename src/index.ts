@@ -941,12 +941,15 @@ class SevenPaceMCPServer {
       const app = express();
       app.use(cors());
       app.use(express.json());
-      const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+      const transport = new StreamableHTTPServerTransport({
+        sessionIdGenerator: undefined,
+      });
       await this.server.connect(transport as any);
       app.post("/mcp", (req: any, res: any) => {
         transport.handleRequest(req, res, req.body).catch((err: any) => {
           console.error("HTTP transport error:", err);
-          if (!res.headersSent) res.status(500).json({ error: "Internal Server Error" });
+          if (!res.headersSent)
+            res.status(500).json({ error: "Internal Server Error" });
         });
       });
       app.get("/mcp", (_req: any, res: any) => res.status(200).send("OK"));
