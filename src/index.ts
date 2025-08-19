@@ -639,8 +639,7 @@ class SevenPaceMCPServer {
         content: [
           {
             type: "text",
-            text:
-              "✅ 7pace MCP server is reachable (limited mode). Provide SEVENPACE_ORGANIZATION and SEVENPACE_TOKEN to enable time logging.",
+            text: "✅ 7pace MCP server is reachable (limited mode). Provide SEVENPACE_ORGANIZATION and SEVENPACE_TOKEN to enable time logging.",
           },
         ],
       };
@@ -698,6 +697,20 @@ class SevenPaceMCPServer {
   }
 
   private async handleListActivityTypes() {
+    if (
+      !process.env.SEVENPACE_TOKEN ||
+      process.env.SEVENPACE_TOKEN === "test-token-replace-with-real-token"
+    ) {
+      return {
+        content: [
+          {
+            type: "text",
+            text:
+              "No activity types available in limited mode. Set SEVENPACE_ORGANIZATION and SEVENPACE_TOKEN to enable.",
+          },
+        ],
+      };
+    }
     const items = await this.sevenPaceService.listActivityTypes();
     const lines = items.map((t) => `${t.id}  -  ${t.name}`).join("\n");
     return {
@@ -711,6 +724,20 @@ class SevenPaceMCPServer {
   }
 
   private async handleGetWorklogs(args: any) {
+    if (
+      !process.env.SEVENPACE_TOKEN ||
+      process.env.SEVENPACE_TOKEN === "test-token-replace-with-real-token"
+    ) {
+      return {
+        content: [
+          {
+            type: "text",
+            text:
+              "📄 Worklogs unavailable in limited mode. Provide SEVENPACE_ORGANIZATION and SEVENPACE_TOKEN.",
+          },
+        ],
+      };
+    }
     if (args.startDate && !isIsoDateOnly(args.startDate)) {
       throw new McpError(
         ErrorCode.InvalidParams,
