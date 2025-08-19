@@ -77,7 +77,7 @@ async function runAllTests() {
         const { spawn } = require('child_process');
         
         const testResult = await new Promise((resolve) => {
-            const server = spawn('node', ['dist/index.js'], {
+            const server = spawn('node', ['dist/index.js', '--stdio'], {
                 stdio: ['pipe', 'pipe', 'pipe'],
                 env: process.env
             });
@@ -89,7 +89,7 @@ async function runAllTests() {
                     const parsed = JSON.parse(data.toString());
                     if (parsed.id === 2 && parsed.result?.tools) {
                         const tools = parsed.result.tools;
-                        const expectedTools = ['log_time', 'get_worklogs', 'update_worklog', 'delete_worklog', 'generate_time_report'];
+                        const expectedTools = ['log_time', 'get_worklogs', 'update_worklog', 'delete_worklog', 'generate_time_report', 'list_activity_types'];
                         const hasAllTools = expectedTools.every(tool => 
                             tools.some(t => t.name === tool)
                         );
@@ -144,7 +144,7 @@ async function runAllTests() {
         
         if (testResult) {
             console.log('✅ MCP Protocol Compatibility: PASSED');
-            console.log('   All 5 tools properly defined and accessible');
+            console.log('   All 6 tools properly defined and accessible');
             console.log('');
             passedTests++;
         } else {

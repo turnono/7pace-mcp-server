@@ -20,7 +20,7 @@ async function healthCheck() {
     console.log('\n🚀 Starting MCP Server...');
     
     return new Promise((resolve) => {
-        const server = spawn('node', ['dist/index.js'], {
+        const server = spawn('node', ['dist/index.js', '--stdio'], {
             stdio: ['pipe', 'pipe', 'pipe'],
             env: process.env
         });

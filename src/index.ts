@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 
 import "dotenv/config";
+import express from "express";
+import cors from "cors";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import {
   CallToolRequestSchema,
   ErrorCode,
@@ -161,7 +164,7 @@ class SevenPaceService {
     // Build payload matching the working cURL (date, length seconds, billableLength seconds)
     const worklog: any = {
       workItemId: entry.workItemId,
-      date: entry.date,
+      timestamp: entry.date,
       length: Math.round(entry.hours * 3600),
       billableLength: Math.round(entry.hours * 3600),
       comment: entry.description,
@@ -409,6 +412,10 @@ class SevenPaceService {
 class SevenPaceMCPServer {
   private server: Server;
   private sevenPaceService: SevenPaceService;
+
+  public getServer(): Server {
+    return this.server;
+  }
 
   constructor() {
     this.server = new Server(
@@ -872,6 +879,7 @@ class SevenPaceMCPServer {
   }
 
   async run() {
+    // This method is now for stdio transport only
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
     console.error("7pace Timetracker MCP server running on stdio");
@@ -880,8 +888,46 @@ class SevenPaceMCPServer {
 
 // Start the server
 if (require.main === module) {
-  const server = new SevenPaceMCPServer();
-  server.run().catch(console.error);
+  const mcpServer = new SevenPaceMCPServer();
+
+  // Support both stdio and http transports
+  if (process.argv.includes("--stdio")) {
+    mcpServer.run().catch(console.error);
+  } else {
+    const app = express();
+    const port = process.env.PORT || 3000;
+
+    app.use(cors());
+    app.use(express.json());
+
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: undefined, // stateless
+    });
+
+    mcpServer.getServer().connect(transport);
+
+    app.post("/mcp", (req, res) => {
+      transport.handleRequest(req, res, req.body).catch((error) => {
+        console.error("Error handling MCP request:", error);
+        if (!res.headersSent) {
+          res.status(500).json({
+            jsonrpc: "2.0",
+            error: { code: -32603, message: "Internal server error" },
+            id: req.body?.id || null,
+          });
+        }
+      });
+    });
+
+    app.get("/", (req, res) => {
+      res.send("7pace MCP Server is running. MCP endpoint is at /mcp");
+    });
+
+    app.listen(port, () => {
+      console.error(`7pace MCP server running on port ${port}`);
+      console.error(`MCP endpoint: http://localhost:${port}/mcp`);
+    });
+  }
 }
 
 export { SevenPaceMCPServer, SevenPaceService };
