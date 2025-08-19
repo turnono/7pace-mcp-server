@@ -5,7 +5,7 @@ metadata:
   title: "7pace Timetracker MCP"
   description: "🚀 Professional time tracking that speaks your language. Track Azure DevOps work items naturally through AI conversations. Zero context switching, enterprise-grade 7pace integration."
   author: "Labournet DevOps Team"
-  version: "1.0.0"
+  version: "1.0.7"
   homepage: "https://7pace-mcp.web.app"
   repository: "https://github.com/turnono/7pace-mcp-server"
   license: "MIT"
