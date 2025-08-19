@@ -1,8 +1,12 @@
 #!/usr/bin/env node
+/// <reference path="./types.d.ts" />
 
 import "dotenv/config";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import express from "express";
+import cors from "cors";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import {
   CallToolRequestSchema,
   ErrorCode,
@@ -931,6 +935,29 @@ class SevenPaceMCPServer {
   }
 
   async run() {
+    // If PORT is provided, start HTTP mode per Smithery container requirements
+    const port = process.env.PORT ? Number(process.env.PORT) : undefined;
+    if (port) {
+      const app = express();
+      app.use(cors());
+      app.use(express.json());
+      const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+      await this.server.connect(transport as any);
+      app.post("/mcp", (req: any, res: any) => {
+        transport.handleRequest(req, res, req.body).catch((err: any) => {
+          console.error("HTTP transport error:", err);
+          if (!res.headersSent) res.status(500).json({ error: "Internal Server Error" });
+        });
+      });
+      app.get("/mcp", (_req: any, res: any) => res.status(200).send("OK"));
+      app.delete("/mcp", (_req: any, res: any) => res.status(200).send("OK"));
+      app.listen(port, () => {
+        console.error(`7pace MCP server (HTTP) on :${port} /mcp`);
+      });
+      return;
+    }
+
+    // Fallback to stdio when no PORT is present
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
     console.error("7pace Timetracker MCP server running on stdio");
