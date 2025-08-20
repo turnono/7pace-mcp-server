@@ -985,6 +985,36 @@ class SevenPaceMCPServer {
       });
       await this.server.connect(transport as any);
 
+      // Fail fast if explicitly requested and required config is missing or placeholder
+      const failFast =
+        String(process.env.FAIL_FAST).toLowerCase() === "true" ||
+        String(process.env.REQUIRE_CONFIG_ON_START).toLowerCase() === "true";
+      const hasValidCreds =
+        !!process.env.SEVENPACE_ORGANIZATION &&
+        !!process.env.SEVENPACE_TOKEN &&
+        process.env.SEVENPACE_TOKEN !== "test-token-replace-with-real-token";
+      if (failFast && !hasValidCreds) {
+        console.error(
+          "[startup] Missing or invalid SEVENPACE_* config and FAIL_FAST is enabled. Exiting."
+        );
+        process.exit(1);
+      }
+
+      // Optional scan timeout to avoid long hangs during deployment scans
+      const scanTimeoutSeconds = Number(process.env.SCAN_TIMEOUT_SECONDS || 120);
+      let scanTimer: ReturnType<typeof setTimeout> | null = setTimeout(() => {
+        console.error(
+          `[startup] No /mcp activity within ${scanTimeoutSeconds}s. Exiting to fail fast.`
+        );
+        process.exit(1);
+      }, scanTimeoutSeconds * 1000);
+      const markActivity = () => {
+        if (scanTimer) {
+          clearTimeout(scanTimer);
+          scanTimer = null;
+        }
+      };
+
       const applyConfigFromQuery = (q: any) => {
         if (!q) return;
         const setIf = (key: string, envKey: string) => {
@@ -1003,16 +1033,29 @@ class SevenPaceMCPServer {
         try {
           applyConfigFromQuery(req.query);
         } catch {}
+        markActivity();
         transport.handleRequest(req, res, req.body).catch((err: any) => {
           console.error("HTTP transport error:", err);
           if (!res.headersSent)
             res.status(500).json({ error: "Internal Server Error" });
         });
       });
-      app.options("/mcp", cors(), (_req: any, res: any) => res.sendStatus(204));
-      app.get("/mcp", (_req: any, res: any) => res.status(200).send("OK"));
-      app.delete("/mcp", (_req: any, res: any) => res.status(200).send("OK"));
-      app.get("/", (_req: any, res: any) => res.status(200).send("OK"));
+      app.options("/mcp", cors(), (_req: any, res: any) => {
+        markActivity();
+        res.sendStatus(204);
+      });
+      app.get("/mcp", (_req: any, res: any) => {
+        markActivity();
+        res.status(200).send("OK");
+      });
+      app.delete("/mcp", (_req: any, res: any) => {
+        markActivity();
+        res.status(200).send("OK");
+      });
+      app.get("/", (_req: any, res: any) => {
+        markActivity();
+        res.status(200).send("OK");
+      });
       app.listen(port, () => {
         console.error(`7pace MCP server (HTTP) on :${port} /mcp`);
       });
