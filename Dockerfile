@@ -3,14 +3,17 @@ FROM node:lts-alpine
 
 WORKDIR /app
 
-ARG CACHE_BUST=2025-08-19-001
+ARG CACHE_BUST=ts-002
 ENV NODE_ENV=production
 ENV SEVENPACE_ORGANIZATION=example
 ENV SEVENPACE_TOKEN=test-token-replace-with-real-token
+ENV FAIL_FAST=true
+ENV SCAN_TIMEOUT_SECONDS=90
 
 COPY package.json package-lock.json tsconfig.json ./
+RUN node -v && npm -v
+RUN echo "$CACHE_BUST" > .build-bust && npm ci --ignore-scripts --no-audit --no-fund
 COPY src ./src
-
-RUN echo "$CACHE_BUST" > .build-bust && npm install --ignore-scripts && npm run build
+RUN echo "=== TSC START ===" && npm run build --loglevel verbose && echo "=== TSC END ==="
 
 CMD ["node", "dist/index.js"]
