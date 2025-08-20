@@ -1001,7 +1001,9 @@ class SevenPaceMCPServer {
       }
 
       // Optional scan timeout to avoid long hangs during deployment scans
-      const scanTimeoutSeconds = Number(process.env.SCAN_TIMEOUT_SECONDS || 120);
+      const scanTimeoutSeconds = Number(
+        process.env.SCAN_TIMEOUT_SECONDS || 120
+      );
       let scanTimer: ReturnType<typeof setTimeout> | null = setTimeout(() => {
         console.error(
           `[startup] No /mcp activity within ${scanTimeoutSeconds}s. Exiting to fail fast.`
