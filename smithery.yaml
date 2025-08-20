@@ -121,57 +121,6 @@ startCommand:
     timeZone: "America/New_York"
     logLevel: "info"
 
-  configSchema:
-    # Comprehensive configuration schema for enterprise use
-    type: object
-    required:
-      - sevenpaceOrganization
-      - sevenpaceToken
-    properties:
-      sevenpaceOrganization:
-        type: string
-        title: "7pace Organization"
-        description: "Your 7pace organization name (e.g., 'labournet')"
-        examples: ["labournet", "acme-corp", "dev-team"]
-      sevenpaceToken:
-        type: string
-        title: "7pace API Token"
-        description: "Personal API token from 7pace Timetracker settings"
-        format: "password"
-      azureDevopsOrgUrl:
-        type: string
-        title: "Azure DevOps Organization URL"
-        description: "Your Azure DevOps organization URL for work item integration"
-        examples:
-          ["https://dev.azure.com/labournet", "https://dev.azure.com/your-org"]
-        format: "uri"
-      azureDevopsPat:
-        type: string
-        title: "Azure DevOps Personal Access Token"
-        description: "PAT with work item read permissions (optional but recommended)"
-        format: "password"
-      timeZone:
-        type: string
-        title: "Time Zone"
-        description: "Your local time zone for accurate time logging"
-        examples: ["America/New_York", "Europe/London", "Asia/Tokyo"]
-        default: "UTC"
-      logLevel:
-        type: string
-        title: "Log Level"
-        description: "Logging verbosity for troubleshooting"
-        enum: ["error", "warn", "info", "debug"]
-        default: "info"
-
-  exampleConfig:
-    # Professional example configuration
-    sevenpaceOrganization: "labournet"
-    sevenpaceToken: "your_7pace_api_token_here"
-    azureDevopsOrgUrl: "https://dev.azure.com/labournet"
-    azureDevopsPat: "your_azure_devops_pat_here"
-    timeZone: "America/New_York"
-    logLevel: "info"
-
 # 🎨 SMITHERY-SPECIFIC OPTIMIZATIONS
 smithery:
   quickSetup: true
