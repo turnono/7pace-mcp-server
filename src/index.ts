@@ -1009,8 +1009,10 @@ class SevenPaceMCPServer {
             res.status(500).json({ error: "Internal Server Error" });
         });
       });
+      app.options("/mcp", cors(), (_req: any, res: any) => res.sendStatus(204));
       app.get("/mcp", (_req: any, res: any) => res.status(200).send("OK"));
       app.delete("/mcp", (_req: any, res: any) => res.status(200).send("OK"));
+      app.get("/", (_req: any, res: any) => res.status(200).send("OK"));
       app.listen(port, () => {
         console.error(`7pace MCP server (HTTP) on :${port} /mcp`);
       });
