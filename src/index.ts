@@ -987,8 +987,9 @@ class SevenPaceMCPServer {
 
       // Fail fast if explicitly requested and required config is missing or placeholder
       const failFast =
-        String(process.env.FAIL_FAST).toLowerCase() === "true" ||
-        String(process.env.REQUIRE_CONFIG_ON_START).toLowerCase() === "true";
+        String(process.env.FAIL_FAST || "").toLowerCase() === "true" ||
+        String(process.env.REQUIRE_CONFIG_ON_START || "").toLowerCase() ===
+          "true";
       const hasValidCreds =
         !!process.env.SEVENPACE_ORGANIZATION &&
         !!process.env.SEVENPACE_TOKEN &&
@@ -1002,14 +1003,17 @@ class SevenPaceMCPServer {
 
       // Optional scan timeout to avoid long hangs during deployment scans
       const scanTimeoutSeconds = Number(
-        process.env.SCAN_TIMEOUT_SECONDS || 120
+        process.env.SCAN_TIMEOUT_SECONDS || 0
       );
-      let scanTimer: ReturnType<typeof setTimeout> | null = setTimeout(() => {
-        console.error(
-          `[startup] No /mcp activity within ${scanTimeoutSeconds}s. Exiting to fail fast.`
-        );
-        process.exit(1);
-      }, scanTimeoutSeconds * 1000);
+      let scanTimer: ReturnType<typeof setTimeout> | null = null;
+      if (scanTimeoutSeconds > 0) {
+        scanTimer = setTimeout(() => {
+          console.error(
+            `[startup] No /mcp activity within ${scanTimeoutSeconds}s. Exiting to fail fast.`
+          );
+          process.exit(1);
+        }, scanTimeoutSeconds * 1000);
+      }
       const markActivity = () => {
         if (scanTimer) {
           clearTimeout(scanTimer);

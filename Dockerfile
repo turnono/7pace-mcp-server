@@ -7,8 +7,10 @@ ARG CACHE_BUST=ts-002
 ENV NODE_ENV=production
 ENV SEVENPACE_ORGANIZATION=example
 ENV SEVENPACE_TOKEN=test-token-replace-with-real-token
-ENV FAIL_FAST=true
-ENV SCAN_TIMEOUT_SECONDS=90
+# Allow fast-fail to be toggled per-deploy via env overrides
+# Defaults are safe for scanners; set FAIL_FAST=true only when desired
+ENV FAIL_FAST=false
+ENV SCAN_TIMEOUT_SECONDS=0
 
 COPY package.json package-lock.json tsconfig.json ./
 RUN node -v && npm -v
