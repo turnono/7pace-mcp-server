@@ -1002,9 +1002,7 @@ class SevenPaceMCPServer {
       }
 
       // Optional scan timeout to avoid long hangs during deployment scans
-      const scanTimeoutSeconds = Number(
-        process.env.SCAN_TIMEOUT_SECONDS || 0
-      );
+      const scanTimeoutSeconds = Number(process.env.SCAN_TIMEOUT_SECONDS || 0);
       let scanTimer: ReturnType<typeof setTimeout> | null = null;
       if (scanTimeoutSeconds > 0) {
         scanTimer = setTimeout(() => {
