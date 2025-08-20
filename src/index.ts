@@ -460,6 +460,30 @@ class SevenPaceMCPServer {
             },
           },
           {
+            name: "configure_sevenpace",
+            description:
+              "Configure 7pace credentials at runtime (organization and token)",
+            inputSchema: {
+              type: "object",
+              properties: {
+                organization: {
+                  type: "string",
+                  description: "7pace organization (e.g., labournet)",
+                },
+                token: {
+                  type: "string",
+                  description: "7pace API token",
+                },
+                baseUrl: {
+                  type: "string",
+                  description:
+                    "Optional override for 7pace base URL (advanced)",
+                },
+              },
+              required: ["organization", "token"],
+            },
+          },
+          {
             name: "log_time",
             description:
               "Log time entry to 7pace Timetracker for a specific work item",
@@ -599,6 +623,10 @@ class SevenPaceMCPServer {
                 },
               ],
             };
+          case "configure_sevenpace":
+            return await this.handleConfigureSevenPace(
+              request.params.arguments
+            );
           case "log_time":
             return await this.handleLogTime(request.params.arguments);
           case "list_activity_types":
@@ -631,6 +659,53 @@ class SevenPaceMCPServer {
         );
       }
     });
+  }
+
+  private async handleConfigureSevenPace(args: any) {
+    if (
+      typeof args?.organization !== "string" ||
+      args.organization.trim().length === 0
+    ) {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        "organization is required and must be a non-empty string"
+      );
+    }
+    if (typeof args?.token !== "string" || args.token.trim().length === 0) {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        "token is required and must be a non-empty string"
+      );
+    }
+
+    const organization = args.organization.trim();
+    const token = args.token.trim();
+    const baseUrl =
+      typeof args.baseUrl === "string" && args.baseUrl.trim().length > 0
+        ? args.baseUrl.trim()
+        : `https://${organization}.timehub.7pace.com`;
+
+    // Persist to env for this process
+    process.env.SEVENPACE_ORGANIZATION = organization;
+    process.env.SEVENPACE_TOKEN = token;
+    process.env.SEVENPACE_BASE_URL = baseUrl;
+
+    // Reinitialize service with new config
+    const cfg: SevenPaceConfig = {
+      baseUrl,
+      token,
+      organizationName: organization,
+    };
+    this.sevenPaceService = new SevenPaceService(cfg);
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: `✅ 7pace credentials configured for org '${organization}'. You can now use log_time and other tools.`,
+        },
+      ],
+    };
   }
 
   private async handleLogTime(args: any) {
