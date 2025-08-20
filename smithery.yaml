@@ -94,7 +94,8 @@ startCommand:
         type: string
         title: "Azure DevOps Organization URL"
         description: "Your Azure DevOps organization URL for work item integration"
-        examples: ["https://dev.azure.com/labournet", "https://dev.azure.com/your-org"]
+        examples:
+          ["https://dev.azure.com/labournet", "https://dev.azure.com/your-org"]
         format: "uri"
       azureDevopsPat:
         type: string
