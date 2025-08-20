@@ -73,6 +73,7 @@ advantages:
 
 startCommand:
   type: http
+  path: "/mcp"
   configSchema:
     type: object
     required:
