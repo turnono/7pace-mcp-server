@@ -1030,13 +1030,11 @@ class SevenPaceMCPServer {
       typeof args.workItemId === "undefined" &&
       typeof args.hours === "undefined" &&
       typeof args.description === "undefined" &&
-      typeof args.activityType === "undefined" &&
-      typeof args.date === "undefined" &&
-      typeof args.startTime === "undefined"
+      typeof args.activityType === "undefined"
     ) {
       throw new McpError(
         ErrorCode.InvalidParams,
-        "Provide at least one field to update: workItemId, hours, description, activityType, date, or startTime"
+        "Provide at least one field to update: workItemId, hours, description, or activityType"
       );
     }
     if (
@@ -1054,18 +1052,6 @@ class SevenPaceMCPServer {
         "hours must be a positive number"
       );
     }
-    if (typeof args.date !== "undefined" && !isIsoDateOnly(args.date)) {
-      throw new McpError(
-        ErrorCode.InvalidParams,
-        "date must be in YYYY-MM-DD format"
-      );
-    }
-    if (typeof args.startTime !== "undefined" && !isIsoDateTime(args.startTime)) {
-      throw new McpError(
-        ErrorCode.InvalidParams,
-        "startTime must be in ISO 8601 format (e.g., 2025-12-08T14:00:00)"
-      );
-    }
 
     const updates: Partial<TimeEntry> = {};
     if (typeof args.workItemId !== "undefined")
@@ -1075,10 +1061,6 @@ class SevenPaceMCPServer {
       updates.description = args.description;
     if (typeof args.activityType !== "undefined")
       updates.activityType = args.activityType;
-    if (typeof args.date !== "undefined")
-      updates.date = args.date;
-    if (typeof args.startTime !== "undefined")
-      updates.startTime = args.startTime;
 
     await this.sevenPaceService.updateWorklog(args.worklogId, updates);
 
