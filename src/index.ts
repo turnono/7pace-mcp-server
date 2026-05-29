@@ -71,8 +71,9 @@ function isGuidLike(value: string | undefined | null): boolean {
 }
 
 function computeHoursFromApiLength(length: number): number {
-  // API returns length in seconds
-  return length / 3600;
+  // Heuristic: REST list often returns seconds; create/update uses minutes.
+  // If the number is large (>= 1000), assume seconds; else minutes.
+  return length >= 1000 ? length / 3600 : length / 60;
 }
 
 class SevenPaceService {
