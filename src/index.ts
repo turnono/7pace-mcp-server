@@ -40,6 +40,7 @@ interface TimeEntry {
   hours: number;
   description: string;
   activityType?: string; // Name or ID
+  startTime?: string; // Optional ISO 8601 datetime (e.g., 2025-12-08T14:00:00)
 }
 
 type ActivityType = { id: string; name: string };
@@ -48,6 +49,11 @@ type WorklogListResponse = { data?: any[]; value?: any[] } | any[];
 
 function isIsoDateOnly(value: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function isIsoDateTime(value: string): boolean {
+  // Matches ISO 8601 datetime: YYYY-MM-DDTHH:MM:SS or with milliseconds/timezone
+  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?$/.test(value);
 }
 
 function isPositiveNumber(value: unknown): value is number {
@@ -65,9 +71,8 @@ function isGuidLike(value: string | undefined | null): boolean {
 }
 
 function computeHoursFromApiLength(length: number): number {
-  // Heuristic: REST list often returns seconds; create/update uses minutes.
-  // If the number is large (>= 1000), assume seconds; else minutes.
-  return length >= 1000 ? length / 3600 : length / 60;
+  // API returns length in seconds
+  return length / 3600;
 }
 
 class SevenPaceService {
@@ -108,7 +113,14 @@ class SevenPaceService {
     const resp = await this.client.get(
       "/api/rest/activitytypes?api-version=3.2"
     );
-    const items: ActivityType[] = Array.isArray(resp.data?.data)
+
+    // Parse activity types from various possible response formats
+    const items: ActivityType[] = Array.isArray(resp.data?.data?.activityTypes)
+      ? resp.data.data.activityTypes.map((it: any) => ({
+          id: it.id ?? it.Id,
+          name: it.name ?? it.Name,
+        }))
+      : Array.isArray(resp.data?.data)
       ? resp.data.data.map((it: any) => ({
           id: it.id ?? it.Id,
           name: it.name ?? it.Name,
@@ -117,6 +129,11 @@ class SevenPaceService {
       ? resp.data.value.map((it: any) => ({
           id: it.Id ?? it.id,
           name: it.Name ?? it.name,
+        }))
+      : Array.isArray(resp.data)
+      ? resp.data.map((it: any) => ({
+          id: it.id ?? it.Id,
+          name: it.name ?? it.Name,
         }))
       : [];
 
@@ -162,17 +179,23 @@ class SevenPaceService {
 
     const activityTypeId = await this.resolveActivityTypeId(entry.activityType);
 
-    // Build payload matching the working cURL (date, length seconds, billableLength seconds)
+    // Build payload - always use timestamp since API ignores the date field
+    // If only date provided, convert to timestamp at midnight
     const worklog: any = {
       workItemId: entry.workItemId,
-      date: entry.date,
-      length: Math.round(entry.hours * 3600),
-      billableLength: Math.round(entry.hours * 3600),
+      timestamp: entry.startTime || `${entry.date}T00:00:00`,
+      length: (() => {
+        const seconds = Math.round(entry.hours * 3600);
+        console.error(`DEBUG: Converting ${entry.hours} hours to ${seconds} seconds`);
+        return seconds;
+      })(),
       comment: entry.description,
       ...(activityTypeId ? { activityTypeId } : {}),
     };
 
     try {
+      console.error(`DEBUG logTime: Request payload: ${JSON.stringify(worklog)}`);
+
       const response = await this.client.post(
         "/api/rest/workLogs?api-version=3.2",
         worklog,
@@ -180,6 +203,9 @@ class SevenPaceService {
           timeout: Number(process.env.SEVENPACE_WRITE_TIMEOUT_MS) || 30000,
         }
       );
+
+      console.error(`DEBUG logTime: Response status: ${response.status}`);
+      console.error(`DEBUG logTime: Response data: ${JSON.stringify(response.data)}`);
 
       // Check for API errors even with 2xx status
       if (response.status >= 400) {
@@ -253,12 +279,20 @@ class SevenPaceService {
       if (startDate) params.from = startDate;
       if (endDate) params.to = endDate;
 
+      console.error(`DEBUG getWorklogs: Requesting with params: ${JSON.stringify(params)}`);
+
       const response = await this.client.get<WorklogListResponse>(
         "/api/rest/worklogs?api-version=3.2",
         { params }
       );
 
       const raw = response.data as any;
+      // Log each worklog's key fields
+      if (Array.isArray(raw?.data)) {
+        raw.data.forEach((wl: any) => {
+          console.error(`DEBUG getWorklogs: Worklog ${wl.id}: length=${wl.length}, timestamp=${wl.timestamp}`);
+        });
+      }
       let items: any[] = [];
 
       if (Array.isArray(raw?.data)) {
@@ -274,6 +308,22 @@ class SevenPaceService {
         }));
       } else if (Array.isArray(raw)) {
         items = raw;
+      }
+
+      // CLIENT-SIDE DATE FILTERING (API doesn't filter properly)
+      if (startDate || endDate) {
+        items = items.filter((item: any) => {
+          const timestamp = item.timestamp || item.Timestamp;
+          if (!timestamp) return false;
+
+          // Extract date portion from timestamp (YYYY-MM-DD)
+          const itemDate = timestamp.split('T')[0];
+
+          if (startDate && itemDate < startDate) return false;
+          if (endDate && itemDate > endDate) return false;
+
+          return true;
+        });
       }
 
       return items as WorklogEntry[];
@@ -292,16 +342,64 @@ class SevenPaceService {
     updates: Partial<TimeEntry>
   ): Promise<any> {
     try {
-      const worklog: Partial<WorklogEntry> = {};
-      if (typeof updates.hours === "number")
-        worklog.length = updates.hours * 3600; // update expects seconds
-      if (updates.description) worklog.comment = updates.description;
-      if (updates.workItemId) worklog.workItemId = updates.workItemId;
+      // First, fetch the existing worklog to get current values
+      // The 7pace API requires ALL fields (length, activityTypeId) even for partial updates
+      const getResponse = await this.client.get(
+        `/api/rest/worklogs/${worklogId}?api-version=3.2`
+      );
 
-      const response = await this.client.put(
+      if (getResponse.status >= 400 || !getResponse.data?.data) {
+        throw new McpError(
+          ErrorCode.InternalError,
+          `Failed to fetch existing worklog: ${getResponse.status} ${getResponse.statusText}`
+        );
+      }
+
+      const existing = getResponse.data.data;
+
+      // Resolve activity type if provided in updates
+      let activityTypeId = existing.activityType?.id || existing.activityTypeId;
+      if (updates.activityType) {
+        const resolvedId = await this.resolveActivityTypeId(updates.activityType);
+        if (resolvedId) {
+          activityTypeId = resolvedId;
+        }
+      }
+
+      // Build update payload with existing values merged with updates
+      // workItemId is required by the API
+      const worklog: any = {
+        workItemId: updates.workItemId || existing.workItemId,
+        length: typeof updates.hours === "number"
+          ? (() => {
+              const seconds = Math.round(updates.hours * 3600);
+              console.error(`DEBUG updateWorklog: Converting ${updates.hours} hours to ${seconds} seconds`);
+              return seconds;
+            })()
+          : existing.length,
+        activityTypeId: activityTypeId,
+        comment: updates.description || existing.comment,
+      };
+
+      // Add date/timestamp - use provided value or preserve existing timestamp
+      if (updates.startTime) {
+        worklog.timestamp = updates.startTime;
+      } else if (updates.date) {
+        worklog.timestamp = `${updates.date}T00:00:00`;
+      } else {
+        // Preserve existing timestamp if not updating date
+        worklog.timestamp = existing.timestamp;
+      }
+
+      console.error(`DEBUG updateWorklog: Request payload: ${JSON.stringify(worklog)}`);
+
+      const response = await this.client.patch(
         `/api/rest/worklogs/${worklogId}?api-version=3.2`,
         worklog
       );
+
+      console.error(`DEBUG updateWorklog: Response status: ${response.status}`);
+      console.error(`DEBUG updateWorklog: Response data: ${JSON.stringify(response.data)}`);
 
       // Check for API errors even with 2xx status
       if (response.status >= 400) {
@@ -496,7 +594,7 @@ class SevenPaceMCPServer {
                 },
                 date: {
                   type: "string",
-                  description: "Date in YYYY-MM-DD format",
+                  description: "Date in YYYY-MM-DD format (required if startTime not provided)",
                 },
                 hours: {
                   type: "number",
@@ -510,8 +608,12 @@ class SevenPaceMCPServer {
                   type: "string",
                   description: "Type of activity (name or ID, optional)",
                 },
+                startTime: {
+                  type: "string",
+                  description: "Optional start time in ISO 8601 format (e.g., 2025-12-08T14:00:00). If provided, overrides date field.",
+                },
               },
-              required: ["workItemId", "date", "hours", "description"],
+              required: ["workItemId", "hours", "description"],
             },
           },
           {
@@ -566,6 +668,18 @@ class SevenPaceMCPServer {
                 description: {
                   type: "string",
                   description: "New description (optional)",
+                },
+                activityType: {
+                  type: "string",
+                  description: "New activity type name or ID (optional)",
+                },
+                date: {
+                  type: "string",
+                  description: "New date in YYYY-MM-DD format (optional)",
+                },
+                startTime: {
+                  type: "string",
+                  description: "New start time in ISO 8601 format (optional, e.g., 2025-12-08T14:00:00)",
                 },
               },
               required: ["worklogId"],
@@ -730,12 +844,29 @@ class SevenPaceMCPServer {
         "workItemId must be a positive integer"
       );
     }
-    if (!isIsoDateOnly(args.date)) {
+
+    // Validate date/startTime - at least one must be provided
+    if (!args.startTime && !args.date) {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        "Either date or startTime must be provided"
+      );
+    }
+
+    if (args.startTime && !isIsoDateTime(args.startTime)) {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        "startTime must be in ISO 8601 format (e.g., 2025-12-08T14:00:00)"
+      );
+    }
+
+    if (args.date && !isIsoDateOnly(args.date)) {
       throw new McpError(
         ErrorCode.InvalidParams,
         "date must be in YYYY-MM-DD format"
       );
     }
+
     if (!isPositiveNumber(args.hours)) {
       throw new McpError(
         ErrorCode.InvalidParams,
@@ -751,10 +882,11 @@ class SevenPaceMCPServer {
 
     const entry: TimeEntry = {
       workItemId: args.workItemId,
-      date: args.date,
+      date: args.date || args.startTime.split('T')[0], // Extract date from startTime if date not provided
       hours: args.hours,
       description: args.description,
       activityType: args.activityType,
+      ...(args.startTime ? { startTime: args.startTime } : {}),
     };
 
     const result = await this.sevenPaceService.logTime(entry);
@@ -766,7 +898,9 @@ class SevenPaceMCPServer {
           text:
             `✅ Time logged successfully!\n\n` +
             `Work Item: #${entry.workItemId}\n` +
-            `Date: ${entry.date}\n` +
+            (entry.startTime
+              ? `Start Time: ${entry.startTime}\n`
+              : `Date: ${entry.date}\n`) +
             `Hours: ${entry.hours}\n` +
             `Description: ${entry.description}\n` +
             `Worklog ID: ${result.id || result.Id || "N/A"}`,
@@ -894,11 +1028,14 @@ class SevenPaceMCPServer {
     if (
       typeof args.workItemId === "undefined" &&
       typeof args.hours === "undefined" &&
-      typeof args.description === "undefined"
+      typeof args.description === "undefined" &&
+      typeof args.activityType === "undefined" &&
+      typeof args.date === "undefined" &&
+      typeof args.startTime === "undefined"
     ) {
       throw new McpError(
         ErrorCode.InvalidParams,
-        "Provide at least one field to update: workItemId, hours, or description"
+        "Provide at least one field to update: workItemId, hours, description, activityType, date, or startTime"
       );
     }
     if (
@@ -916,6 +1053,18 @@ class SevenPaceMCPServer {
         "hours must be a positive number"
       );
     }
+    if (typeof args.date !== "undefined" && !isIsoDateOnly(args.date)) {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        "date must be in YYYY-MM-DD format"
+      );
+    }
+    if (typeof args.startTime !== "undefined" && !isIsoDateTime(args.startTime)) {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        "startTime must be in ISO 8601 format (e.g., 2025-12-08T14:00:00)"
+      );
+    }
 
     const updates: Partial<TimeEntry> = {};
     if (typeof args.workItemId !== "undefined")
@@ -923,6 +1072,12 @@ class SevenPaceMCPServer {
     if (typeof args.hours !== "undefined") updates.hours = args.hours;
     if (typeof args.description !== "undefined")
       updates.description = args.description;
+    if (typeof args.activityType !== "undefined")
+      updates.activityType = args.activityType;
+    if (typeof args.date !== "undefined")
+      updates.date = args.date;
+    if (typeof args.startTime !== "undefined")
+      updates.startTime = args.startTime;
 
     await this.sevenPaceService.updateWorklog(args.worklogId, updates);
 
