@@ -22,7 +22,9 @@
     "test:full": "node test-suite.js",
     "health-check": "node health-check.js",
     "prepublishOnly": "npm run build",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "test:onprem": "node --test test-onprem.js",
+    "test:live-read": "node test-live-read.js"
   },
   "keywords": [
     "mcp",
@@ -68,6 +70,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.1",
+    "@node-ntlm/core": "^0.3.2",
     "@types/node": "^24.2.0",
     "axios": "^1.11.0",
     "dotenv": "^17.2.1",
