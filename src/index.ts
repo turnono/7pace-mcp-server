@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /// <reference path="./types.d.ts" />
 
-import "dotenv/config";
+import { config as loadEnvironment } from "dotenv";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import express from "express";
@@ -15,6 +15,9 @@ import {
   Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 import axios, { AxiosInstance } from "axios";
+import { ntlmAdapter, readNtlmCredentials } from "./ntlm";
+
+loadEnvironment({ quiet: true });
 
 // 7pace Timetracker MCP Server
 // Integrates with 7pace API for time tracking in Azure DevOps
@@ -65,9 +68,8 @@ function isGuidLike(value: string | undefined | null): boolean {
 }
 
 function computeHoursFromApiLength(length: number): number {
-  // Heuristic: REST list often returns seconds; create/update uses minutes.
-  // If the number is large (>= 1000), assume seconds; else minutes.
-  return length >= 1000 ? length / 3600 : length / 60;
+  // The REST API expresses all worklog lengths in seconds.
+  return length / 3600;
 }
 
 class SevenPaceService {
@@ -84,6 +86,11 @@ class SevenPaceService {
 
   constructor(config: SevenPaceConfig) {
     this.config = config;
+    const authMethod = process.env.SEVENPACE_AUTH_METHOD || "bearer";
+    if (authMethod !== "bearer" && authMethod !== "ntlm") {
+      throw new Error("SEVENPACE_AUTH_METHOD must be bearer or ntlm");
+    }
+    if (authMethod === "ntlm") readNtlmCredentials();
     this.client = axios.create({
       baseURL: config.baseUrl,
       headers: {
@@ -91,7 +98,23 @@ class SevenPaceService {
         "Content-Type": "application/json",
       },
       timeout: 15000, // 15 second timeout for all requests
-      validateStatus: (status) => status < 500, // Accept 4xx errors (don't throw)
+      ...(process.env.SEVENPACE_AUTH_METHOD === "ntlm"
+        ? { adapter: ntlmAdapter }
+        : {}),
+    });
+    this.client.interceptors.request.use((request) => {
+      const apiPath = process.env.SEVENPACE_API_PATH || "/api/rest";
+      request.url = request.url?.replace(/^\/api\/rest(?=\/)/, apiPath.replace(/\/$/, ""));
+      if (process.env.SEVENPACE_AUTH_METHOD === "ntlm") {
+        request.headers.delete("Authorization");
+      }
+      return request;
+    });
+    this.client.interceptors.response.use((response) => {
+      if (response.data?.error || response.data?.success === false) {
+        throw new Error("7pace API returned an error: " + JSON.stringify(response.data.error ?? response.data));
+      }
+      return response;
     });
   }
 
@@ -108,17 +131,14 @@ class SevenPaceService {
     const resp = await this.client.get(
       "/api/rest/activitytypes?api-version=3.2"
     );
-    const items: ActivityType[] = Array.isArray(resp.data?.data)
-      ? resp.data.data.map((it: any) => ({
-          id: it.id ?? it.Id,
-          name: it.name ?? it.Name,
-        }))
-      : Array.isArray(resp.data?.value)
-      ? resp.data.value.map((it: any) => ({
-          id: it.Id ?? it.id,
-          name: it.Name ?? it.name,
-        }))
-      : [];
+    const data = resp.data?.data?.activityTypes ?? resp.data?.data ?? resp.data?.value ?? resp.data;
+    if (!Array.isArray(data)) {
+      throw new Error("Unexpected 7pace activity types response");
+    }
+    const items: ActivityType[] = data.map((it: any) => ({
+      id: it.id ?? it.Id,
+      name: it.name ?? it.Name,
+    }));
 
     this.activityTypesCache = { timestamp: now, items };
     return items;
@@ -162,10 +182,10 @@ class SevenPaceService {
 
     const activityTypeId = await this.resolveActivityTypeId(entry.activityType);
 
-    // Build payload matching the working cURL (date, length seconds, billableLength seconds)
+    // REST uses a local timestamp and durations in seconds.
     const worklog: any = {
       workItemId: entry.workItemId,
-      date: entry.date,
+      timeStamp: entry.date + "T00:00:00",
       length: Math.round(entry.hours * 3600),
       billableLength: Math.round(entry.hours * 3600),
       comment: entry.description,
@@ -192,7 +212,7 @@ class SevenPaceService {
       }
 
       // Validate that the worklog was actually created
-      const responseData = response.data;
+      const responseData = response.data?.data ?? response.data;
       if (!responseData) {
         throw new McpError(
           ErrorCode.InternalError,
@@ -249,16 +269,29 @@ class SevenPaceService {
 
     try {
       const params: any = {};
-      if (workItemId) params.workItemId = workItemId;
-      if (startDate) params.from = startDate;
-      if (endDate) params.to = endDate;
+      if (workItemId) params["$workItemIds"] = workItemId;
+      if (startDate) params["$fromTimestamp"] = startDate + "T00:00:00";
+      if (endDate) params["$toTimestamp"] = endDate + "T23:59:59.999";
 
-      const response = await this.client.get<WorklogListResponse>(
-        "/api/rest/worklogs?api-version=3.2",
-        { params }
-      );
-
-      const raw = response.data as any;
+      const collected: any[] = [];
+      let raw: any;
+      for (let skip = 0; ; skip += 500) {
+        const response = await this.client.get<WorklogListResponse>(
+          "/api/rest/worklogs?api-version=3.2",
+          { params: { ...params, "$count": 500, "$skip": skip } }
+        );
+        raw = response.data;
+        const page = raw?.data ?? raw?.value ?? raw;
+        if (!Array.isArray(page)) {
+          throw new Error("Unexpected 7pace worklogs response");
+        }
+        collected.push(...page);
+        if (page.length < 500) break;
+        if (skip >= 99500) throw new Error("Too many worklogs; narrow the date range");
+      }
+      raw = Array.isArray(raw?.value)
+        ? { value: collected }
+        : { data: collected };
       let items: any[] = [];
 
       if (Array.isArray(raw?.data)) {
@@ -298,7 +331,7 @@ class SevenPaceService {
       if (updates.description) worklog.comment = updates.description;
       if (updates.workItemId) worklog.workItemId = updates.workItemId;
 
-      const response = await this.client.put(
+      const response = await this.client.patch(
         `/api/rest/worklogs/${worklogId}?api-version=3.2`,
         worklog
       );
@@ -314,7 +347,7 @@ class SevenPaceService {
       }
 
       // Validate the response indicates successful update
-      const responseData = response.data;
+      const responseData = response.data?.data ?? response.data;
       if (!responseData) {
         throw new McpError(
           ErrorCode.InternalError,
@@ -358,7 +391,7 @@ class SevenPaceService {
       }
 
       // For delete operations, some APIs return error information in response body
-      const responseData = response.data;
+      const responseData = response.data?.data ?? response.data;
       if (
         responseData &&
         (responseData.error || responseData.success === false)
@@ -388,17 +421,26 @@ class SevenPaceService {
     userId?: string
   ): Promise<any> {
     try {
-      const params: any = {
-        "api-version": "3.2",
-        from: startDate,
-        to: endDate,
+      if (userId) {
+        const me = await this.client.get("/api/rest/me?api-version=3.2");
+        const currentUserId = me.data?.data?.user?.id;
+        if (userId !== currentUserId) {
+          throw new Error("Reports support the authenticated user's worklogs only");
+        }
+      }
+      const worklogs = await this.getWorklogs(undefined, startDate, endDate);
+      const byWorkItem: Record<string, number> = {};
+      let totalSeconds = 0;
+      for (const log of worklogs) {
+        totalSeconds += log.length;
+        const key = String(log.workItemId);
+        byWorkItem[key] = (byWorkItem[key] || 0) + log.length / 3600;
+      }
+      return {
+        startDate, endDate, scope: "authenticated user",
+        entries: worklogs.length, totalHours: totalSeconds / 3600,
+        hoursByWorkItem: byWorkItem,
       };
-      if (userId) params.userId = userId;
-
-      const response = await this.client.get("/api/rest/reports/time", {
-        params,
-      });
-      return response.data;
     } catch (error) {
       throw new McpError(
         ErrorCode.InternalError,
@@ -436,7 +478,7 @@ class SevenPaceMCPServer {
       organizationName: process.env.SEVENPACE_ORGANIZATION || "",
     };
 
-    if (!config.token || !config.organizationName) {
+    if ((!config.token && process.env.SEVENPACE_AUTH_METHOD !== "ntlm") || !config.organizationName) {
       throw new Error(
         "Missing required environment variables: SEVENPACE_TOKEN and SEVENPACE_ORGANIZATION"
       );
@@ -711,8 +753,9 @@ class SevenPaceMCPServer {
   private async handleLogTime(args: any) {
     // Allow deployment scanners to succeed without credentials or arguments
     if (
-      !process.env.SEVENPACE_TOKEN ||
-      process.env.SEVENPACE_TOKEN === "test-token-replace-with-real-token"
+      (process.env.SEVENPACE_AUTH_METHOD !== "ntlm" &&
+        (!process.env.SEVENPACE_TOKEN ||
+          process.env.SEVENPACE_TOKEN === "test-token-replace-with-real-token"))
     ) {
       return {
         content: [
@@ -777,8 +820,9 @@ class SevenPaceMCPServer {
 
   private async handleListActivityTypes() {
     if (
-      !process.env.SEVENPACE_TOKEN ||
-      process.env.SEVENPACE_TOKEN === "test-token-replace-with-real-token"
+      (process.env.SEVENPACE_AUTH_METHOD !== "ntlm" &&
+        (!process.env.SEVENPACE_TOKEN ||
+          process.env.SEVENPACE_TOKEN === "test-token-replace-with-real-token"))
     ) {
       return {
         content: [
@@ -803,8 +847,9 @@ class SevenPaceMCPServer {
 
   private async handleGetWorklogs(args: any) {
     if (
-      !process.env.SEVENPACE_TOKEN ||
-      process.env.SEVENPACE_TOKEN === "test-token-replace-with-real-token"
+      (process.env.SEVENPACE_AUTH_METHOD !== "ntlm" &&
+        (!process.env.SEVENPACE_TOKEN ||
+          process.env.SEVENPACE_TOKEN === "test-token-replace-with-real-token"))
     ) {
       return {
         content: [
@@ -873,8 +918,9 @@ class SevenPaceMCPServer {
 
   private async handleUpdateWorklog(args: any) {
     if (
-      !process.env.SEVENPACE_TOKEN ||
-      process.env.SEVENPACE_TOKEN === "test-token-replace-with-real-token"
+      (process.env.SEVENPACE_AUTH_METHOD !== "ntlm" &&
+        (!process.env.SEVENPACE_TOKEN ||
+          process.env.SEVENPACE_TOKEN === "test-token-replace-with-real-token"))
     ) {
       return {
         content: [
@@ -938,8 +984,9 @@ class SevenPaceMCPServer {
 
   private async handleDeleteWorklog(args: any) {
     if (
-      !process.env.SEVENPACE_TOKEN ||
-      process.env.SEVENPACE_TOKEN === "test-token-replace-with-real-token"
+      (process.env.SEVENPACE_AUTH_METHOD !== "ntlm" &&
+        (!process.env.SEVENPACE_TOKEN ||
+          process.env.SEVENPACE_TOKEN === "test-token-replace-with-real-token"))
     ) {
       return {
         content: [
@@ -971,8 +1018,9 @@ class SevenPaceMCPServer {
 
   private async handleGenerateTimeReport(args: any) {
     if (
-      !process.env.SEVENPACE_TOKEN ||
-      process.env.SEVENPACE_TOKEN === "test-token-replace-with-real-token"
+      (process.env.SEVENPACE_AUTH_METHOD !== "ntlm" &&
+        (!process.env.SEVENPACE_TOKEN ||
+          process.env.SEVENPACE_TOKEN === "test-token-replace-with-real-token"))
     ) {
       return {
         content: [
@@ -1050,7 +1098,12 @@ class SevenPaceMCPServer {
 
   async run() {
     // If PORT is provided, start HTTP mode per Smithery container requirements
-    const port = process.env.PORT ? Number(process.env.PORT) : undefined;
+    const mode = process.env.MCP_TRANSPORT;
+    if (mode && mode !== "stdio" && mode !== "http") {
+      throw new Error("MCP_TRANSPORT must be stdio or http");
+    }
+    const port = mode === "stdio" ? undefined : Number(process.env.PORT) || undefined;
+    if (mode === "http" && !port) throw new Error("HTTP transport requires PORT");
     if (port) {
       const app = express();
       app.use(cors());
@@ -1067,8 +1120,9 @@ class SevenPaceMCPServer {
           "true";
       const hasValidCreds =
         !!process.env.SEVENPACE_ORGANIZATION &&
-        !!process.env.SEVENPACE_TOKEN &&
-        process.env.SEVENPACE_TOKEN !== "test-token-replace-with-real-token";
+        (process.env.SEVENPACE_AUTH_METHOD === "ntlm" ||
+          (!!process.env.SEVENPACE_TOKEN &&
+            process.env.SEVENPACE_TOKEN !== "test-token-replace-with-real-token"));
       if (failFast && !hasValidCreds) {
         console.error(
           "[startup] Missing or invalid SEVENPACE_* config and FAIL_FAST is enabled. Exiting."
